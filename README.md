@@ -1,1 +1,10 @@
-# con-diffusion
+This repository contains the analysis, tables, text, and figures for the manuscript "Creative or Not? Hierarchical Diffusion Modeling of the Creative Evaluation Process" submitted by Michelle Donzallaz, Julia Haaf, and Claire Stevenson. 
+
+The manuscript is written using R Markdown. We used the following R version and packages: 
+
+R (Version 3.6.1; R Core Team, 2019), BayesFactor (Version 0.9.12.4.2; Morey & Rouder, 2018), bayesplot (Version 1.7.0; Gabry, Simpson, Vehtari, Betancourt, & Gelman, 2019), brms (Version 2.10.0; Bürkner, 2017), coda (Version 0.19.3; Plummer, Best, Cowles, & Vines, 2006), corrplot2017 (Wei & Simko, 2017), cowplot (Version 1.0.0; Wilke, 2019), DescTools (Version 0.99.29; al., 2019), dplyr (Version 1.0.0; Wickham, François, Henry, & Müller, 2020), ggplot2 (Version 3.3.3; Wickham, 2016), gridExtra (Version 2.3; Auguie, 2017), here (Version 0.1; Müller, 2017), magrittr (Version 2.0.1; Bache & Wickham, 2020), Matrix (Version 1.2.17; Bates & Maechler, 2019), msm (Version 1.6.7; Jackson, 2011), mvtnorm (Version 1.0.11; Genz & Bretz, 2009), papaja (Version 0.1.0.9997; Aust & Barth, 2020), psych (Version 1.8.12; Revelle, 2018), Rcpp (Version 1.0.2; Eddelbuettel & François, 2011; Eddelbuettel & Balamuta, 2017), rstan (Version 2.19.2; Stan Development Team, 2019a), StanHeaders
+(Version 2.19.0; Stan Development Team, 2019b), stringr (Version 1.4.0; Wickham, 2019), tibble (Version 3.0.4; Müller & Wickham, 2020), and tidyr (Version 1.0.0; Wickham & Henry, 2019).  
+
+When the packages are installed, you can open "Manuscript/Manuscript.Rmd" and knit it to produce the PDF-document as we submitted it.
+
+**Warning**: Knitting the manuscript may take a while (several hours, up to a day) because it estimates two computationally expensive hierarchical drift diffusion models. It also automatically saves the generated model fit objects so that you can reuse them to explore them once the document is knitted. The model fit objects are also needed to reproduce the analysis reported in the supplementary materials.
