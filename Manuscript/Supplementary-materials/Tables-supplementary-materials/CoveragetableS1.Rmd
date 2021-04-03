@@ -1,0 +1,31 @@
+---
+title: "Creative or Not, Table coverage Study 1"
+output:
+  pdf_document: papaja::apa6_pdf
+  html_document: default
+  word_document: papaja::apa6_word
+---
+```{r 'covgtable', results = "asis"}
+rownames(coverage) <- c("Median RT 'not creative'"
+                                      , "Median RT 'creative'"
+                            , "Proportion 'creative'")
+
+coverage <- coverage %>% 
+    rownames_to_column(var = "Statistic") %>% 
+    select(-measure)
+
+colnames(coverage)  <- c("Statistic","50\\% CrI","80\\% CrI","95\\% CrI","99\\% CrI")
+
+apa_table(
+    coverage,
+    placement = "H",
+    align = c("c", "c", "c", "c", "c"),
+    caption = "Study 1: Coverage probabilities for the three summary statistics across participants and the 50\\%, 80\\%, 95\\%, and 99\\% CrIs",
+    note = NULL,
+    small = TRUE,
+    digits = 3,
+    escape = FALSE
+    )
+```
+
+

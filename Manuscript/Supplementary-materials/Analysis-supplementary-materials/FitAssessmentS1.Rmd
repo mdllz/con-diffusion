@@ -1,0 +1,303 @@
+---
+title: "Creative or not, Model fit assessment Study 1"
+output:
+  pdf_document: papaja::apa6_pdf
+  html_document: default
+  word_document: papaja::apa6_word
+---
+```{r}
+samples1 <- 500
+```
+
+```{r 'sampling from post pred distribution', include = F, eval = T}
+# To obtain 500 samples from the posterior predictive distribution, load the previously saved model fit 
+load(file = "../../Analysis/wienermodel1.Rda")
+
+# Negative RTs denote a "not creative" response
+
+pred_wienerS1.bias2 <- predict(wienermodel1, 
+                       summary = FALSE, 
+                       negative_rt = TRUE, 
+                       nsamples = samples1)
+
+save(pred_wienerS1.bias, file = "pred_wienerS1.bias2.Rda",  compress = "xz")
+```
+
+```{r 'read dat1 and clean and prepare'}
+# load data
+fulldat1 <- read.csv("../../Data/Study1/CON_S1.csv")
+
+##############
+# clean data #
+##############
+
+## same response in at least 90% of the trials
+excl1 <- fulldat1 %>%
+  group_by(pers) %>%
+  summarize(countCreative = sum(creative)/n(), 
+            countNotCreative = 1-(sum(creative)/n())) %>%
+  filter(countCreative >= 0.9 | countNotCreative >= 0.9)
+
+# exclude participants based on 90% criterion and remove first two responses
+dat1_excl1 <- fulldat1 %>% 
+  filter(!(pers %in% excl1$pers)) %>%
+# remove first two trials
+  group_by(pers) %>% 
+  slice(3:n()) %>% 
+  ungroup()
+
+# remove RT > 6s and < 0.3s
+dat1_excl2 <- dat1_excl1 %>% 
+  filter(rt <= 6000  &  rt > 300)
+
+# exclude participants with fewer than 47 trials
+excl3 <- dat1_excl2 %>% 
+  group_by(pers) %>% 
+  count() %>% 
+  filter(n < 47)
+
+dat1 <- dat1_excl2 %>%
+  filter(!(pers %in% excl3$pers)) %>% 
+  # turn rt into seconds
+  mutate(rt = rt/1000)
+```
+
+```{r 'combine data and samples', message = F, warning  =  F, include = F}
+# combine data with posterior predictive samples
+
+d_data <- as_tibble(cbind(dat1, as_tibble(t(pred_wienerS1.bias2))))
+```
+
+```{r 'checkRTs and proportions', include = F}
+# compute the probability of responding “creative”, the median RTs for "creative" responses and median RTs for the "not creative" responses for each sample of the posterior predictive distribution. 
+
+# All code below is adjusted from: http://singmann.org/wiener-model-analysis-with-brms-part-ii/
+
+d_data_agg <- d_data %>% 
+  dplyr::group_by(pers) %>%  # select grouping var
+  summarise_at(.vars = vars(starts_with("V")), 
+               funs(prob.upper = mean(. > 0),
+                    medrt.lower = median(abs(.[. < 0]) ),
+                    medrt.upper = median(.[. > 0] )
+               )) %>% 
+  ungroup() %>% 
+  gather("key", "value", -pers) %>% # remove grouping var
+  separate("key", c("rep", "measure"), sep = "_") %>% 
+  spread(measure, value) %>% 
+  group_by(pers) %>% # select grouping vars
+  summarise_at(.vars = vars(prob.upper, medrt.lower, medrt.upper), 
+               .funs = funs(median = median(., na.rm = TRUE),
+                            llll = quantile(., probs = 0.01, na.rm = TRUE),
+                            lll = quantile(., probs = 0.025, na.rm = TRUE),
+                            ll = quantile(., probs = 0.1, na.rm = TRUE),
+                            l = quantile(., probs = 0.25, na.rm = TRUE),
+                            h = quantile(., probs = 0.75, na.rm = TRUE),
+                            hh = quantile(., probs = 0.9, na.rm = TRUE),
+                            hhh = quantile(., probs = 0.975, na.rm = TRUE),
+                            hhhh = quantile(., probs = 0.99, na.rm = TRUE)
+               ))
+
+# Now the same for the observed data:
+data_agg <- dat1 %>% 
+  dplyr::mutate(pers = as.numeric(as.character(pers))) %>% 
+  dplyr::group_by(pers) %>% # select grouping var
+  summarise(prob.upper = mean(creative == "1"),
+            medrt.upper = median(rt[creative == "1"]),
+            medrt.lower = median(rt[creative == "0"])) %>% 
+  ungroup %>% 
+  left_join(d_data_agg)
+```
+
+```{r 'compare overall means and prob creative', include = F}
+# Check whether the overall means across participants are the same for the observed as well as predicted data
+
+d_data_agg2 <- data_agg %>% 
+  summarise_if(is.numeric, mean, na.rm = TRUE)
+```
+
+```{r 'plots median RT and prob. creative', include = F, eval = F}
+# The plot code is included here for the sake of completeness. It can also be found in the Figures folder.
+
+p1 <- ggplot(d_data_agg2, aes(x = 1)) +
+  geom_linerange(aes(ymin =  prob.upper_lll, ymax =  prob.upper_hhh), 
+                 col = "darkgrey", size = 1.5) + 
+  geom_linerange(aes(ymin =  prob.upper_ll, ymax =  prob.upper_hh), 
+                 size = 3, col = "grey") + 
+  geom_point(aes(y = prob.upper_median), shape = 1, size = 2) +
+  geom_point(aes(y = prob.upper), shape = 4, col = "red", size = 2) +
+  ggtitle("Response Probabilities") + 
+  ylab("P of responding 'creative'") + xlab("") +
+  theme(axis.text.y = element_text(size = 8),
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.line.x = element_blank(),
+         plot.title = element_text(size = 10),
+         axis.title.y = element_text(size = 10))
+p2 <- ggplot(d_data_agg2, aes(x = 1)) +
+  geom_linerange(aes(ymin =  medrt.upper_lll, ymax =  medrt.upper_hhh), 
+                 col = "darkgrey", size =  1.5) + 
+  geom_linerange(aes(ymin =  medrt.upper_ll, ymax =  medrt.upper_hh), 
+                 size = 3, col = "grey") + 
+  geom_point(aes(y = medrt.upper_median), shape = 1, size = 2) +
+  geom_point(aes(y = medrt.upper), shape = 4, col = "red", size = 2) +
+  ggtitle("Median RTs 'creative'") + 
+  ylab("RT (s)") + xlab("") +
+  theme(axis.text.y = element_text(size = 8),
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.line.x = element_blank(),
+         plot.title = element_text(size = 10),
+         axis.title.y = element_text(size = 10))
+p3 <- ggplot(d_data_agg2, aes(x = 1)) +
+  geom_linerange(aes(ymin =  medrt.lower_lll, ymax =  medrt.lower_hhh), 
+                 col = "darkgrey", size = 1.5) + 
+  geom_linerange(aes(ymin =  medrt.lower_ll, ymax =  medrt.lower_hh), 
+                 size = 3, col = "grey") + 
+  geom_point(aes(y = medrt.lower_median), shape = 1, size = 2) +
+  geom_point(aes(y = medrt.lower), shape = 4, col = "red", size = 2) +
+  ggtitle("Median RTs 'not creative'") + 
+  ylab("RT (s)") + xlab("") +
+  theme(axis.text.y = element_text(size = 8),
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.line.x = element_blank(),
+        plot.title = element_text(size = 10),
+        axis.title.y = element_text(size = 10))
+
+grid.arrange(p1, p2, p3, ncol = 2)
+```
+
+```{r, warning = F, include = F,  eval = F, include = F}
+# Predicted response probabilities at the participant level. This code creates plots that show the predicted and observed response probabilities for each participant.
+
+for(i in seq(1,293, by = 11)){
+  d <- na.omit(data_agg[data_agg$pers == sort(unique(data_agg$pers))[i:(i+10)],])
+  d$pers <- as.numeric(as.character(d$pers))
+  plot(d$prob.upper_median ~d$pers, type = "n", xaxt = "n", bty= "n", ylim = c(0,1), xlab = "Participant", ylab = "P response 'creative'")
+  segments(x0 = d$pers, y0 = d$prob.upper_lll, x1 = d$pers, y1 = d$prob.upper_hhh)
+  segments(x0 = d$pers, y0 = d$prob.upper_ll, x1 = d$pers, y1 = d$prob.upper_hh, lwd = 4, col = "darkgrey")
+  points(y = d$prob.upper, x = d$pers, col = "red", pch = 15)
+  points(y = d$prob.upper_median, x = d$pers, pch = 19)
+  text(max(d$pers)-1, 0.95, "predicted")
+  text(max(d$pers)-1, 0.89, "observed", col = "red")
+  axis(1, at = d$pers)
+}
+```
+
+```{r 'coverage probabilities', include = F}
+# Compute the proportion of participants for which the observed test statistics falls into the CrIs (i.e., 50%, 80%, 95%, and 99%)
+coverage <- data_agg %>% 
+  mutate(prob.upper_99 = (prob.upper >= prob.upper_llll) & 
+           (prob.upper <= prob.upper_hhhh),
+         prob.upper_95 = (prob.upper >= prob.upper_lll) & 
+           (prob.upper <= prob.upper_hhh),
+         prob.upper_80 = (prob.upper >= prob.upper_ll) & 
+           (prob.upper <= prob.upper_hh),
+         prob.upper_50 = (prob.upper >= prob.upper_l) & 
+           (prob.upper <= prob.upper_h),
+         medrt.upper_99 = (medrt.upper > medrt.upper_llll) & 
+           (medrt.upper < medrt.upper_hhhh),
+         medrt.upper_95 = (medrt.upper > medrt.upper_lll) & 
+           (medrt.upper < medrt.upper_hhh),
+         medrt.upper_80 = (medrt.upper > medrt.upper_ll) & 
+           (medrt.upper < medrt.upper_hh),
+         medrt.upper_50 = (medrt.upper > medrt.upper_l) & 
+           (medrt.upper < medrt.upper_h),
+         medrt.lower_99 = (medrt.lower > medrt.lower_llll) & 
+           (medrt.lower < medrt.lower_hhhh),
+         medrt.lower_95 = (medrt.lower > medrt.lower_lll) & 
+           (medrt.lower < medrt.lower_hhh),
+         medrt.lower_80 = (medrt.lower > medrt.lower_ll) & 
+           (medrt.lower < medrt.lower_hh),
+         medrt.lower_50 = (medrt.lower > medrt.lower_l) & 
+           (medrt.lower < medrt.lower_h)
+  ) %>% 
+  summarise_at(vars(matches("\\d")), mean, na.rm = TRUE) %>% 
+  gather("key", "mean") %>% 
+  separate("key", c("measure", "ci"), "_") %>% 
+  spread(ci, mean) %>% 
+  as.data.frame()
+```
+
+```{r 'preparation qq  plot', cache = T}
+# Inspect the fit between the observed and predicted RTs for other quantiles. Plot the individual vs. observed quantiles of the RTs and the concordance correlation coefficient (CCC) for each quantile.
+
+quantiles <- c(0.1, 0.25, 0.5, 0.75, 0.9)
+
+pp2 <- d_data %>% 
+  dplyr::group_by(pers) %>%  # select grouping var
+  summarise_at(.vars = vars(starts_with("V")), 
+               funs(lower = list(rownames_to_column(
+                 data.frame(q = quantile(abs(.[. < 0]), probs = quantiles)))),
+                    upper = list(rownames_to_column(
+                      data.frame(q = quantile(.[. > 0], probs = quantiles))))
+               )) %>% 
+  ungroup() %>% 
+  gather("key", "value", -pers) %>% # remove grouping var
+  separate("key", c("rep", "boundary"), sep = "_") %>% 
+  unnest(value) %>% 
+  group_by(pers, boundary, rowname) %>% # grouping vars + new vars
+  summarise(predicted = mean(q, na.rm = TRUE))
+rt_pp <- dat1 %>% 
+  dplyr::mutate(pers = as.numeric(as.character(pers))) %>% 
+  dplyr::group_by(pers) %>% # select grouping vars
+  summarise(lower = list(rownames_to_column(
+    data.frame(observed = quantile(rt[creative == 0], probs = quantiles)))),
+    upper = list(rownames_to_column(
+      data.frame(observed = quantile(rt[creative == 1], probs = quantiles ))))
+  ) %>% 
+  ungroup() %>% 
+  gather("boundary", "value", -pers) %>%
+  unnest(value) %>% 
+  left_join(pp2)
+```
+
+```{r 'CCC'}
+# computesthe CCC
+plottext <- rt_pp %>% 
+  group_by(rowname, boundary) %>% 
+  summarise(ccc = format(
+    CCC(observed, predicted, na.rm = TRUE)$rho.c$est, 
+    digits = 2))
+```
+
+```{r 'qq plots', eval =  F}
+# Shown here for sake of completeness (plot is run in the Figures folder)
+p_creative <- rt_pp %>% 
+  filter(boundary == "upper") %>% 
+  ggplot(aes(x = observed, predicted)) +
+  geom_abline(slope = 1, intercept = 0) +
+  geom_point() +
+  geom_text(data=plottext[ plottext$boundary == "upper", ],
+            aes(x = 1, y =5, label=ccc), 
+            parse = TRUE, inherit.aes=FALSE) +
+  coord_fixed() +
+  facet_grid(~ rowname) +
+  ggtitle("'Creative' responses") +
+  theme_bw() +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank())
+
+p_notcreative <- rt_pp %>% 
+  filter(boundary == "lower") %>% 
+  ggplot(aes(x = observed, predicted)) +
+  geom_abline(slope = 1, intercept = 0) +
+  geom_point() +
+  geom_text(data=plottext[ plottext$boundary == "lower", ],
+            aes(x = 1, y = 5, label=ccc), 
+            parse = TRUE, inherit.aes=FALSE) +
+  coord_fixed() +
+  facet_grid(~ rowname) +
+  ggtitle("'Not creative' responses") +
+  theme_bw()  +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank())
+
+grid.arrange(p_creative, p_notcreative, ncol = 1)
+```
+

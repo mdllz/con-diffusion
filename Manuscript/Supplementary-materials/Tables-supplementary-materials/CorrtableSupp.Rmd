@@ -1,0 +1,65 @@
+---
+title: "Creative or not, Table Correlations supp."
+output:
+  pdf_document: papaja::apa6_pdf
+  html_document: default
+  word_document: papaja::apa6_word
+---
+```{r 'resCORtablesupp', results = "asis", include = T}
+summary2_excl <- summary(wienermodel2_excl)
+CORsummary_wienermodel2_excl <- data.frame(summary2_excl$random$pers)[-(1:5),]
+rownames(CORsummary_wienermodel2_excl) <- c("$\\rho_{\\sigma_{\\delta}\\sigma_{\\theta_{OR}}}$"
+                            , "$\\rho_{\\sigma_{\\delta}\\sigma_{\\theta_{UT}}}$"
+                            , "$\\rho_{\\sigma_{\\theta_{OR}}\\sigma_{\\theta_{UT}}}$"
+                            , "$\\rho_{\\sigma_{\\delta}\\sigma_{\\alpha}}$"
+                            , "$\\rho_{\\sigma_{\\theta_{OR}}\\sigma_{\\alpha}}$"
+                            , "$\\rho_{\\sigma_{\\theta_{UT}}\\sigma_{\\alpha}}$"
+                            , "$\\rho_{\\sigma_{\\delta}\\sigma_{\\beta}}$"
+                            , "$\\rho_{\\sigma_{\\theta_{OR}}\\sigma_{\\beta}}$"
+                            , "$\\rho_{\\sigma_{\\theta_{UT}}\\sigma_{\\beta}}$"
+                            , "$\\rho_{\\sigma_{\\alpha}\\sigma_{\\beta}}$")
+colnames(CORsummary_wienermodel2_excl) <- c("Mean","SE", "LB", "UB", "Rhat", "Bulk_ESS", "Tail_ESS")
+
+CORsummary_wienermodel2_excl %<>%
+    select(-Bulk_ESS,-Tail_ESS, -Rhat) %>% # removing Bulk ESS and Tail ESS
+    rownames_to_column(var = " ")
+
+
+summary2 <- summary(wienermodel2)
+CORsummary_wienermodel2 <- data.frame(summary2$random$pers)[-(1:5),]
+rownames(CORsummary_wienermodel2) <- c("$\\rho_{\\sigma_{\\delta}\\sigma_{\\theta_{OR}}}$"
+                            , "$\\rho_{\\sigma_{\\delta}\\sigma_{\\theta_{UT}}}$"
+                            , "$\\rho_{\\sigma_{\\theta_{OR}}\\sigma_{\\theta_{UT}}}$"
+                            , "$\\rho_{\\sigma_{\\delta}\\sigma_{\\alpha}}$"
+                            , "$\\rho_{\\sigma_{\\theta_{OR}}\\sigma_{\\alpha}}$"
+                            , "$\\rho_{\\sigma_{\\theta_{UT}}\\sigma_{\\alpha}}$"
+                            , "$\\rho_{\\sigma_{\\delta}\\sigma_{\\beta}}$"
+                            , "$\\rho_{\\sigma_{\\theta_{OR}}\\sigma_{\\beta}}$"
+                            , "$\\rho_{\\sigma_{\\theta_{UT}}\\sigma_{\\beta}}$"
+                            , "$\\rho_{\\sigma_{\\alpha}\\sigma_{\\beta}}$")
+colnames(CORsummary_wienermodel2) <- c("Mean","SE", "LB", "UB", "Rhat", "Bulk_ESS", "Tail_ESS")
+
+CORsummary_wienermodel2 %<>%
+    select(-Bulk_ESS,-Tail_ESS, -Rhat) %>% # removing Bulk ESS and Tail ESS
+    rownames_to_column(var = " ")
+
+tab <- 
+  right_join(CORsummary_wienermodel2_excl, CORsummary_wienermodel2, by = " ") %>% 
+  arrange(Mean.x) %>% 
+  mutate_if(is.numeric, function(x) round(x, digits = 2)) %>% 
+  replace(is.na(.), "-")
+
+colnames(tab) <- c(" ", "Mean", "SD", "LB", "UB", "Mean", "SD", "LB", "UB")
+  
+apa_table(
+    tab,
+    placement = "H",
+    align = c("l", "l","l","l","l","r","r","r","r"),
+    caption = "Posterior mean, standard deviation, and 95\\% credible interval for the correlations among random effects parameters",
+    note = "SD = standard deviation; LB = lower bound; UB = upper bound.",
+    small = TRUE,
+    digits = 2,
+    escape = FALSE,
+    col_spanners = list(`Study 2 (excl.)` = c(2,5), `Study 2` = c(6,9))
+    )
+```

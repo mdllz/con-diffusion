@@ -1,0 +1,456 @@
+---
+title: "Creative or not, Main Analysis Study 2"
+output:
+  pdf_document: papaja::apa6_pdf
+  html_document: default
+  word_document: papaja::apa6_word
+---
+```{r 'read fulldat2 and clean data'}
+# load data
+fulldat2 <- read.csv("../Data/Study2/CON_S2.csv")
+
+#################
+# Data cleaning #
+#################
+
+
+## same response in at least 90% of the trials
+excl1_2 <- fulldat2 %>%
+  group_by(pers) %>%
+  summarize(countCreative = sum(creative)/n(), 
+            countNotCreative = 1-(sum(creative)/n())) %>%
+  filter(countCreative >= 0.9 | countNotCreative >= 0.9)
+
+# exclude participants based on 90% criterion and remove first two responses
+dat2_excl1_2 <- fulldat2 %>% 
+  filter(!(pers %in% excl1_2$pers)) %>%
+# remove first two trials
+  group_by(pers) %>% 
+  slice(3:n()) %>% 
+  ungroup()
+
+# remove RT > 6s and < 0.3s
+dat2_excl2 <- dat2_excl1_2 %>% 
+  filter(rt <= 6000  &  rt > 300)
+
+# exclude participants with fewer than 47 trials
+excl3 <- dat2_excl2 %>% 
+  group_by(pers) %>% 
+  count() %>% 
+  filter(n < 47)
+
+dat2 <- dat2_excl2 %>%
+  filter(!(pers %in% excl3$pers)) %>% 
+  # turn rt into seconds
+  mutate(rt = rt/1000)
+
+```
+
+```{r 'S2 Initial RT and response analyses', include = F}
+mean(dat2$rt)
+sd(dat2$rt)
+median(dat2$rt)
+mean(dat2$creative)
+
+mean(dat2[dat2$creative == 1,]$rt)
+sd(dat2[dat2$creative == 1,]$rt)
+
+mean(dat2[dat2$creative == 0,]$rt)
+sd(dat2[dat2$creative == 0,]$rt)
+```
+
+```{r 'S2 correlation originality and utility and mean stimuli RT', include = F}
+# correlation originality and utility ratings
+stim <- dat2 %>% 
+            select(itemid, orig.rating_s, util.rating_s) %>% 
+            distinct()
+
+cor.orig.util <- correlationBF(stim$orig.rating_s, stim$util.rating_s, posterior = T, iterations = 10000)
+mean(cor.orig.util[,"rho"])
+
+BF.cor.orig.util <- correlationBF(stim$orig.rating_s, stim$util.rating_s)
+exp(BF.cor.orig.util@bayesFactor$bf)
+
+
+# Correlation response times and originality
+stim <- dat2 %>%
+            group_by(itemid) %>%
+            summarize(rt.meansALL = mean(rt), prop.creative = mean(creative)) %>%
+            left_join(stim)
+
+cor.rtmeans.orig <- correlationBF(stim$orig.rating_s, stim$rt.meansALL, posterior = T, iterations = 10000)
+mean(cor.rtmeans.orig[,"rho"])
+
+BF.cor.rtmeans.orig <- correlationBF(stim$orig.rating_s, stim$rt.meansALL)
+exp(BF.cor.rtmeans.orig@bayesFactor$bf)
+
+
+# Correlation response times and utility
+
+cor.rtmeans.util <- correlationBF(stim$util.rating_s, stim$rt.meansALL, posterior = T, iterations = 10000)
+mean(cor.rtmeans.util[,"rho"])
+
+BF.cor.rtmeans.util <- correlationBF(stim$util.rating_s, stim$rt.meansALL)
+exp(BF.cor.rtmeans.util@bayesFactor$bf)
+
+
+# Correlation response times "creative" and originality
+
+stim <- dat2 %>%
+              filter(creative == 1) %>%
+              group_by(itemid) %>%
+              summarize(rt.meansC = mean(rt)) %>%
+              left_join(stim)
+
+
+cor.rtmeans.orig.crea <- correlationBF(stim$orig.rating_s, stim$rt.meansC,  posterior = T, iterations = 10000)
+mean(cor.rtmeans.orig.crea[,"rho"])
+
+BF.cor.rtmeans.orig.crea <- correlationBF(stim$orig.rating_s, stim$rt.meansC)
+exp(BF.cor.rtmeans.orig.crea@bayesFactor$bf)
+  
+# Correlation response time means "creative" and utility
+
+cor.rtmeans.util.crea <- correlationBF(stim$util.rating_s, stim$rt.meansC, posterior = T, iterations = 10000)
+mean(cor.rtmeans.util.crea[,"rho"])
+
+BF.cor.rtmeans.util.crea <- correlationBF(stim$util.rating_s, stim$rt.meansC)
+exp(BF.cor.rtmeans.util.crea@bayesFactor$bf)
+
+# Correlation response times "not creative" and originality
+
+stim <- dat2 %>%
+              filter(creative == 0) %>%
+              group_by(itemid) %>%
+              summarize(rt.meansNC = mean(rt)) %>%
+              left_join(stim)
+
+
+cor.rtmeans.orig.notcrea <- correlationBF(stim$orig.rating_s, stim$rt.meansNC, iterations = 10000, posterior = T)
+mean(cor.rtmeans.orig.notcrea[,"rho"])
+
+BF.cor.rtmeans.orig.notcrea <- correlationBF(stim$orig.rating_s, stim$rt.meansNC)
+exp(BF.cor.rtmeans.orig.notcrea@bayesFactor$bf)
+
+
+# Correlation response times "not creative" and utility
+
+cor.rtmeans.util.notcrea <- correlationBF(stim$util.rating_s, stim$rt.meansNC, posterior = T, iterations = 10000)
+mean(cor.rtmeans.util.notcrea[,"rho"])
+
+BF.cor.rtmeans.util.notcrea <- correlationBF(stim$util.rating_s, stim$rt.meansNC)
+exp(BF.cor.rtmeans.util.notcrea@bayesFactor$bf)
+```
+
+```{r 'est settings S2'}
+warmup2 <- 500
+iter2 <- 4000
+chains2 <- 4
+cores2 <- 4
+max_td2 <- 15
+adapt_d2 <- .99
+```
+
+
+```{r, cache = TRUE, eval = TRUE}
+# turn variables into factor and create numeric response variable for estimation
+dat2$pers <- as.factor(dat2$pers)
+dat2$itemid <- as.factor(dat2$itemid)
+dat2$rt <- as.numeric(dat2$rt)
+dat2$creative <- as.numeric(dat2$creative)
+# model formula
+formula <- bf(rt | dec(creative) ~ 1 + (1|itemid) + orig.rating_s + util.rating_s + (1 + orig.rating_s + util.rating_s|p|pers),
+              bs ~ 1 + (1|p|pers),
+              bias ~ 1 + (1|p|pers))
+
+# get_prior(formula,
+#           data = dat2, 
+#           family = wiener(link_bs = "identity",
+#                           link_ndt = "identity",
+#                           link_bias = "identity"))
+# set priors
+prior <- c(
+  prior("lkj(3)", class = "cor"),
+  prior("normal(0, 0.2)", class = "b", lb = 0),
+  prior("normal(0, 0.3)", class = "sd"),
+  set_prior("normal(0, 1)", class = "Intercept"),
+  set_prior("beta(1, 1)", class = "Intercept", dpar = "bias"),
+  set_prior("normal(0, 2)", class = "Intercept", dpar = "bs"),
+  set_prior("normal(0, 0.3)", class = "sd", dpar =  "bias"),
+  set_prior("normal(0, 0.3)", class = "sd", dpar =  "bs"),
+  set_prior("normal(0, 0.3)", class = "sd", group = "pers"),
+  set_prior("normal(0, 0.3)", class = "sd", group = "itemid"),
+  set_prior("uniform(0, 300)", class = "ndt"))
+
+make_stancode(formula,
+              family = wiener(link_bs = "identity",
+                              link_ndt = "identity",
+                              link_bias = "identity"),
+              data = dat2,
+              prior = prior)
+
+initfun <- function() {
+  list(
+    b = rtnorm(2, mean = 0, sd = 0.5, lower = 0),
+    Intercept_bs = runif(tmp_dat$K_bs, 1, 2),
+    ndt = 0.01,
+    Intercept_bias = 0.5,
+    L_2 = diag(tmp_dat$M_2),
+    z_2 = matrix(rnorm(tmp_dat$M_2*tmp_dat$N_2, 0, 0.01),
+                 tmp_dat$M_2, tmp_dat$N_2)
+  )
+}
+
+tmp_dat <- make_standata(formula, 
+                         family = wiener(link_bs = "identity",
+                                         link_ndt = "identity",
+                                         link_bias = "identity"),
+                         data = dat2, prior = prior)
+# model estimation
+wienermodel2 <- brm(formula, 
+                   data = dat2,
+                   family = wiener(link_bs = "identity", 
+                                   link_ndt = "identity",
+                                   link_bias = "identity"),
+                   prior = prior, inits = initfun,
+                   iter = iter2, warmup = warmup2, chains = chains2, cores = cores2, sample_prior = T,
+                   control = list(max_treedepth = max_td2, adapt_delta = adapt_d2))
+
+save(wienermodel2, file = "wienermodel2.Rda", compress = "xz")
+```
+
+```{r 'S2 model diagnostics', include = F}
+# divergent transitions
+nr.div.trans2 <- sum(subset(nuts_params(wienermodel2), Parameter=="divergent__")$Value)
+
+# smallest number of eff2ective samples
+
+head(sort(summary(wienermodel2$fit)$summary[,"n_eff"]))
+min.neff2 <- min(summary(wienermodel2$fit)$summary[,"n_eff"])
+
+# largest rhat-values
+tail(sort(summary(wienermodel2$fit)$summary[,"Rhat"]))
+max.rhat2 <- max(summary(wienermodel2$fit)$summary[,"Rhat"])
+```
+
+```{r 'S2 model summary', include = F}
+# general overview of posterior means of parameters
+summary(wienermodel2)
+```
+
+```{r 'S2 FE results', include = F}
+# fixed effects only
+FEsummary2 <- fixef(wienermodel2)
+```
+
+```{r 'S2 RE results', include = F}
+# random effects only
+REsummary2 <- summary(wienermodel2)$random$pers
+```
+
+```{r 'S2 individual posterior means drift rate', include = F}
+# extract individual posterior means
+eff2 <- coef(wienermodel2)$pers %>%
+  as.data.frame() %>%
+  rownames_to_column("pers")
+```
+
+```{r 'S2 drift rate proportion CrI', include = F}
+# Compute proportions of CrI above, around, and below zero
+
+## Originality: CrI above 0
+sum(eff2$Q2.5.orig.rating_s > 0)
+round(sum(eff2$Q2.5.orig.rating_s > 0)/nrow(eff2)*100, digits = 2)
+
+## Originality: CrI below 0
+sum(eff2$Q97.5.orig.rating_s < 0)
+round(sum(eff2$Q97.5.orig.rating_s < 0)/nrow(eff2)*100, digits = 2)
+
+## Originality: CrI includes 0
+sum(eff2$Q2.5.orig.rating_s < 0 & eff2$Q97.5.orig.rating_s > 0)
+round(sum(eff2$Q2.5.orig.rating_s < 0 & eff2$Q97.5.orig.rating_s > 0)/nrow(eff2)*100, digits = 2)
+
+## Originality: posterior mean below 0
+sum(eff2$Estimate.orig.rating_s < 0)
+round(sum(eff2$Estimate.orig.rating_s < 0)/nrow(eff2)*100, digits = 2)
+
+## Originality: posterior mean above 0
+sum(eff2$Estimate.orig.rating_s > 0)
+round(sum(eff2$Estimate.orig.rating_s > 0), digits = 2)
+
+
+orig.dr.sums2 <- data.frame("CI above 0" = sum(eff2$Q2.5.orig.rating_s > 0)
+                      , "CI below 0" = sum(eff2$Q97.5.orig.rating_s < 0)
+                      , "CI includes 0" = sum(eff2$Q2.5.orig.rating_s < 0 & eff2$Q97.5.orig.rating_s > 0)
+                      , "PM below 0" = sum(eff2$Estimate.orig.rating_s < 0)
+                      , "PM above 0" = sum(eff2$Estimate.orig.rating_s > 0)
+)
+
+# Utility: CrI above 0
+sum(eff2$Q2.5.util.rating_s > 0)
+round(sum(eff2$Q2.5.util.rating_s > 0)/nrow(eff2)*100, digits = 2)
+
+# Utility: CrI below 0
+sum(eff2$Q97.5.util.rating_s < 0)
+round(sum(eff2$Q97.5.util.rating_s < 0)/nrow(eff2)*100, digits = 2)
+
+# Utility: CrI includes 0
+sum(eff2$Q2.5.util.rating_s < 0 & eff2$Q97.5.util.rating_s > 0)
+round(sum(eff2$Q2.5.util.rating_s < 0 & eff2$Q97.5.util.rating_s > 0)/nrow(eff2)*100, digits = 2)
+
+# Utility: posterior mean below 0
+sum(eff2$Estimate.util.rating_s < 0)
+round(sum(eff2$Estimate.util.rating_s < 0)/nrow(eff2)*100, digits = 2)
+
+# Utility: posterior mean above 0
+sum(eff2$Estimate.util.rating_s > 0)
+round(sum(eff2$Estimate.util.rating_s > 0)/nrow(eff2)*100, digits = 2)
+
+
+util.dr.sums2 <- data.frame("CI above 0" = sum(eff2$Q2.5.util.rating_s > 0)
+                      , "CI below 0" = sum(eff2$Q97.5.util.rating_s < 0)
+                      , "CI includes 0" = sum(eff2$Q2.5.util.rating_s < 0 & eff2$Q97.5.util.rating_s > 0)
+                      , "PM below 0" = sum(eff2$Estimate.util.rating_s < 0)
+                      , "PM above 0" = sum(eff2$Estimate.util.rating_s > 0))
+```
+
+
+```{r 'S2 hypotheses tests  CON task', include = F}
+# H1
+h1 <- hypothesis(wienermodel2, "orig.rating_s = 0")
+h1
+
+
+# H2
+h2 <- hypothesis(wienermodel2, "util.rating_s = 0")
+plot(h2)
+1/h2$hypothesis$Evid.Ratio
+
+
+# H3
+h3 <- hypothesis(wienermodel2, "orig.rating_s > util.rating_s")
+plot(h3)
+h3
+
+
+# H4
+h4 <- correlationBF(eff2$Estimate.orig.rating_s, eff2$Estimate.util.rating_s, nullInterval = c(0,-1))
+exp(h4@bayesFactor$bf)[1] # BF
+h4.samples <- posterior(h4, iterations = 10000, index = 1)
+mean(h4.samples[,"rho"])
+
+
+# H5b
+post.samples <- dplyr::select(posterior_samples(wienermodel2), contains("r_pers[") & contains("orig.rating_s")) 
+prior.samples <- prior_samples(wienermodel2)
+# count evidential iterations in posterior
+above0.post <- 0
+for(r in 1:nrow(post.samples)) {
+  if(all(post.samples[r,] > 0)) {
+    above0.post <- above0.post + 1
+  }
+}
+post <- above0.post/nrow(post.samples) # no evidential iterations
+# count evidential iterations in prior samples
+prior.i <- matrix(NA, nrow = nrow(prior.samples), ncol = length(unique(dat2$pers)))
+for(r in 1:nrow(prior.samples)) {
+  # sample individual effects from prior
+  prior.i[r,] <- rnorm(n = length(unique(dat2$pers)), mean = prior.samples$b[r], sd = prior.samples$sd_pers[r]) 
+}
+above0.prior <- 0
+for(r in 1:nrow(prior.i)) {
+  if(all(prior.i[r,] > 0)) {
+    above0.prior <- above0.prior + 1
+  }
+}
+prior <- above0.prior/nrow(prior.i) # 23 percent evidential iterations
+BF.H5b <- 1/((1/(nrow(post.samples)+1))/prior) # evicence for unconstrained hypothesis
+
+# H6b
+post.samples <- dplyr::select(posterior_samples(wienermodel2), contains("r_pers[") & contains("util.rating_s")) 
+above0.post <- 0
+for(r in 1:nrow(post.samples)) {
+  if(all(post.samples[r,] > 0)) {
+    above0.post <- above0.post + 1
+  }
+}
+post <- above0.post/nrow(post.samples) # no evidential iterations
+BF.H6b <-  1/((1/(nrow(post.samples)+1))/prior)# evicence for unconstrained hypothesis
+```
+
+```{r 'S2 hypotheses CON task and importance ratings',  include = F}
+# H7a & H7b
+ratings_sr <- read.csv("../Data/Study2/SR_ratings_S2.csv") %>% 
+# create sumscores
+  mutate(orig.sum = origRating + innovRating,
+         util.sum = utilRating + appropRating)
+# add ratings to model estimates
+eff2 <- eff2 %>% 
+  mutate(pers = as.numeric(pers)) %>% 
+  left_join(ratings_sr, by = "pers")
+# one-sided test H7a
+h7a <- correlationBF(eff2$Estimate.orig.rating_s, eff2$orig.sum, nullInterval = c(0, 1))
+exp(h7a@bayesFactor$bf)[1] # BF
+h7a.samples <- posterior(h7a, iterations = 10000, index = 1)
+mean(h7a.samples[,"rho"])
+# one-sided test H7b
+h7b <- correlationBF(eff2$Estimate.util.rating_s, eff2$util.sum, nullInterval = c(0, 1))
+exp(h7b@bayesFactor$bf)[1] # BF
+h7b.samples <- posterior(h7b, iterations = 10000, index = 1)
+mean(h7b.samples[,"rho"])
+```
+
+```{r, 'hypotheses CON task and AUT', include = F, results = 'hide'}
+dat_AUT2_r <- read.csv("../Data/Study2/AUT_S2.csv")
+
+# remove participants' data with less than 90 percent valid responses
+dat_AUT2 <- clean_aut_data(dat_AUT2_r) %>%
+  # remove 17 invalid responses: orig & util = 0
+    filter(!(originality == 0 & utility == 0))
+
+# average scores per object and count
+dat_AUT2 %>% 
+  group_by(object) %>% 
+  summarize(mean.orig = mean(originality),
+            mean.util = mean(utility),
+            count = n(),
+            count.pers = length(unique(respondent_id)),
+            count.per.pers = count/count.pers)
+```
+
+
+```{r}
+# compute average scores and combine with eff
+eff2_aut <- dat_AUT2 %>%
+  group_by(respondent_id) %>%
+  summarize(origScore = mean(originality),
+            utilScore = mean(utility)) %>% 
+  rename("pers" = respondent_id) %>% 
+  right_join(eff2) %>% 
+  drop_na()
+```
+
+```{r 'S2 hypotheses CON task and AUT', include = F}
+# H8
+h8a <- correlationBF(eff2_aut$origScore, eff2_aut$Estimate.orig.rating_s, nullInterval = c(0,1))
+exp(h8a@bayesFactor$bf)[1] # BF
+h8a.samples <- posterior(h8a, iterations = 10000, index = 1)
+mean(h8a.samples[,"rho"])
+
+h8b <- correlationBF(eff2_aut$origScore, eff2_aut$Estimate.util.rating_s, nullInterval = c(-1,0))
+exp(h8b@bayesFactor$bf)[1] # BF
+h8b.samples <- posterior(h8b, iterations = 10000, index = 1)
+mean(h8b.samples[,"rho"])
+
+
+# H9
+h9a <- correlationBF(eff2_aut$utilScore, eff2_aut$Estimate.util.rating_s, nullInterval = c(0,1))
+exp(h9a@bayesFactor$bf)[1] # BF
+h9a.samples <- posterior(h9a, iterations = 10000, index = 1)
+mean(h9a.samples[,"rho"])
+
+h9b <- correlationBF(eff2_aut$utilScore, eff2_aut$Estimate.orig.rating_s, nullInterval = c(-1, 0))
+exp(h9b@bayesFactor$bf)[1] # BF
+h9b.samples <- posterior(h9b, iterations = 10000, index = 1)
+mean(h9b.samples[,"rho"])
+```

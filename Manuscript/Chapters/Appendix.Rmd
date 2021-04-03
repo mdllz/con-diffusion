@@ -1,0 +1,167 @@
+---
+title: "Creative or not, Appendices"
+output:
+  pdf_document: papaja::apa6_pdf
+  html_document: default
+  word_document: papaja::apa6_word
+---
+## Appendix A
+
+This Appendix contains the DDM specification. Model differences between the studies are mentioned where necessary.
+
+Let $\boldsymbol{Y_{(ij)}}$ denote a response vector of the decision and response time ($X_{(ij)},T_{(ij)}$) for the $i$th participant, $i= 1, ..., I$ in the $j$th trial, $j= 1, ...,J$ of the CON task. The bivariate data $\boldsymbol{Y_{(ij)}}$ is assumed to be distributed according to a Wiener distribution,
+
+\[\boldsymbol{Y_{(ij)}} \sim \mbox{Wiener}(\alpha_{(ij)}, \beta_{(ij)}, \tau_{(ij)}, \delta_{(ij)}),\]
+
+with the four model parameters boundary separation $\alpha$, bias $\beta$, non-decision-time $\tau$, and drift rate $\delta$. The Wiener distribution is a joint density function of deciding whether a use is creative or not, $X_{(ij)}$, at time $T_{(ij)}$ [@VandekerckhoveEtAl:2011].    
+
+  The double index notation suggests that, in principle, the four parameters may differ across participants, as well as across trials. To reduce model complexity, we constrain the model in several ways. First, we  treat all parameters constant across trials. Second, at the participant level, we  allow participants to differ in three out of four parameters, $\alpha$, $\beta$, and $\delta$. The non-decision time parameter $\tau$  be constrained to be constant across trials as well as across participants, i.e., $\tau_{(ij)} = \tau$, because interpreting random effects for the non-decision time parameter has shown to be problematic [@Singmann:2018a]. We  treat differences across individuals as random effects, assuming that participants are a sample from a population distribution.   
+  
+  Our main focus of interest  be on the drift rate parameter $\delta$. It is the only model parameter assumed to be influenced by stimulus characteristics because the remaining parameters are already set before the decision-making whether something is creative or not takes place [e.g., @VandekerckhoveEtAl:2011]. To examine the influence of originality and utility when evaluating creativity, we  regress $\delta$ on the originality and utility ratings of the stimuli. We  include random intercepts as well as random slopes to take interindividual variation into account. Furthermore, because the response times and proportions of 'creative' responses have shown to vary considerably across the 64 task stimuli, we  also include random intercepts pertaining to the stimuli. Mathematically, we express the above described as follows,  
+
+\[\delta_{(ij)} = \theta_{\delta(i)} + \phi_{\delta(j)} + \theta_{OR(i)} z_{OR} + \theta_{UT(i)}z_{UT}.\]
+
+The parameters $\theta_{\delta(i)}$, $\theta_{OR(i)}$, and $\theta_{UT(i)}$ reflect participant $i$'s drift rate decomposition. Specifically, $\theta_{\delta(i)}$ denotes the drift rate intercept, $\theta_{OR(i)}$ the originality effect, and $\theta_{UT(i)}$ the utility effect of individual $i$. Furthermore, $\phi_{\delta(j)}$ is stimulus $j$'s individual deviation from the drift rate intercept. Lastly, $z_{OR}$ and $z_{UT}$ refer to z-scores of the originality and utility ratings of the stimuli.  
+  
+  In Study 1, the boundary separation parameter has random and fixed effects and the bias parameter is fixed. In Study 2, both the boundary separation and the bias parameter are allowed to vary across individuals. All random effects pertaining to the individuals to be correlated in both studies. As such, we  assume that the random effects are drawn from the same multivariate normal distribution with variance-covariance matrix $\boldsymbol\Sigma$, i.e.,
+
+\[\begin{bmatrix} 
+\theta_{\delta(i)} \\
+\theta_{OR(i)} \\
+\theta_{UT(i)} \\
+\alpha_{(i)} \\
+\end{bmatrix} 
+\sim
+\mbox{Multivariate-Normal} \begin{pmatrix} 
+\begin{bmatrix} 
+\mu_\delta \\
+\mu_{\theta_{OR}} \\
+\mu_{\theta_{UT}} \\
+\mu_\alpha \\
+\end{bmatrix},
+\boldsymbol{\Sigma}
+\end{pmatrix},
+\]
+
+in Study 1, and
+
+\[\begin{bmatrix} 
+\theta_{\delta(i)} \\
+\theta_{OR(i)} \\
+\theta_{UT(i)} \\
+\alpha_{(i)} \\
+\beta_{(i)}
+\end{bmatrix} 
+\sim
+\mbox{Multivariate-Normal} \begin{pmatrix} 
+\begin{bmatrix} 
+\mu_\delta \\
+\mu_{\theta_{OR}} \\
+\mu_{\theta_{UT}} \\
+\mu_\alpha \\
+\mu_\beta
+\end{bmatrix},
+\boldsymbol{\Sigma}
+\end{pmatrix},
+\]
+
+in Study 2. 
+  
+  $\boldsymbol{\Sigma}$ is further defined below. The random stimulus effects are orthogonal to the random effects concering the individuals. They are also assumed to be randomly sampled from a population distribution (of stimuli),
+  
+\[\phi_{\delta(j)} \sim \mbox{Normal}(0, \sigma_{\delta(j)}),\]
+
+where 0 is the mean and $\sigma_{\delta(j)}$ is the standard deviation.  
+
+ We need to specify priors for all fixed and random effects parameters as well as for the correlations among the random effects parameters.   
+
+
+### Prior specification Study 1
+
+  We use a standard normal prior for the originality and utility effects on the drift rate,
+
+\[\theta_{OR}, \theta_{UT} \sim \mbox{Normal}(0,1),\].
+
+  For the remaining fixed effects we  use the following weakly informative priors:
+  
+\[\theta_{\delta} \sim \mbox{Normal}(0,1)\]
+\[\mu_{\beta} \sim \mbox{Beta}(1.3,1.3)\]
+\[\mu_{\alpha} \sim \mbox{Normal}^+(0,2)\]
+\[\tau \sim \mbox{Uniform}(0, 300).\]
+
+  These prior distributions  restrict the parameters to a plausible range. The range of the a-priori bias parameter is from 0 to 1 and the boundary separation is restricted to be positive. The non-decision time generally needs to be smaller than the RTs. We  therefore use 300ms, the minimally required response time (see exclusion criterion II.), as upper bound for the prior on $\tau$.
+  
+  For all variability parameters we  use the following prior,
+
+\[\sigma_{\delta_i}, \sigma_{\delta_j}, \sigma_{OR}, \sigma_{UT}, \sigma_{\alpha} \sim \mbox{Normal}^+(0,0.3).\]  
+
+ Lastly, we  place a prior on the random effects correlations concerning the individuals. The variance-covariance matrix $\boldsymbol\Sigma$ needs to be decomposed such that we can specify a prior for the correlations only. We refer to the matrix containing the random effects correlations as $\boldsymbol{\mathrm{P}}$. Specifically, $\boldsymbol\Sigma$ can be rewritten as $\boldsymbol{\Phi}\boldsymbol{\mathrm{P}}\boldsymbol{\Phi}$, whereby $\boldsymbol{\Phi}$ is a 4x4 matrix with only the variability parameters on the diagonal, $\boldsymbol{\Phi}$ = diag$(\sigma_{\delta_i},\sigma_{OR}, \sigma_{UT}, \sigma_{\alpha})$, and $\boldsymbol{\mathrm{P}}$ is a 4x4 correlation matrix. Exemplarily, the correlation between the random originality and utility effects is expressed as $\rho_{\sigma_{OR}\sigma_{UT}}$. We  place a Lewandowski-Kurowicka-Joe (LKJ) prior with the shape 3 on $\boldsymbol{\mathrm{P}}$ [@LewandowskiEtAl:2009],
+
+\[\boldsymbol{\mathrm{P}} \sim \mathrm{LKJ}(3).\]
+
+  This prior restricts the correlations to the range -1 to 1,  makes it a proper correlation matrix, and places most prior mass around 0.
+
+
+### Prior specification Study 2
+
+  
+  We use informative, truncated prior distributions for the parameters where we expect a positive effect (i.e., the originality and utility effects on the drift rate),
+  
+\[\mu_{\theta_{OR}}, \mu_{\theta_{UT}} \sim \mbox{Normal}^+(0,0.2),\]
+
+where 0 is the mean and 0.2 the standard deviation. This truncated prior distribution is informed by previous research that, overall, people take into account both originality and utility when they evaluate creative ideas. It is also informed by data. In Study 1's dataset, the presence of effects of both stimulus originality and utility on the drift rate are detectable using this prior.
+  
+  For the remaining fixed effects we  use the following weakly informative priors:
+  
+\[\mu_{\theta_{\delta}} \sim \mbox{Normal}(0,1)\]
+\[\mu_{\beta} \sim \mbox{Beta}(1,1)\]
+\[\mu_{\alpha} \sim \mbox{Normal}^+(0,2)\]
+\[\tau \sim \mbox{Uniform}(0, 300).\]
+
+  These prior distributions again restrict the parameters to a plausible range.
+  
+  For all variability parameters we use the following prior,
+
+\[\sigma_{\delta_i}, \sigma_{\delta_j}, \sigma_{OR}, \sigma_{UT}, \sigma_{\beta}, \sigma_{\alpha} \sim \mbox{Normal}^+(0,0.3).\]  
+
+This prior is again informed by previous analyses on Study 1's dataset. 
+ Lastly, we need to place a prior on the random effects correlations concerning the individuals. Here, $\boldsymbol\Sigma$ can again be rewritten as $\boldsymbol{\Phi}\boldsymbol{\mathrm{P}}\boldsymbol{\Phi}$, whereby $\boldsymbol{\Phi}$ is a 5x5 matrix with only the variability parameters on the diagonal, $\boldsymbol{\Phi}$ = diag$(\sigma_{\delta_i},\sigma_{OR}, \sigma_{UT}, \sigma_{\alpha}, \sigma_{\beta})$, and $\boldsymbol{\mathrm{P}}$ is a 5x5 correlation matrix. We again place a Lewandowski-Kurowicka-Joe (LKJ) prior with the shape parameter 3 on $\boldsymbol{\mathrm{P}}$ [@LewandowskiEtAl:2009],
+
+\[\boldsymbol{\mathrm{P}} \sim \mathrm{LKJ}(3).\]
+
+
+\clearpage
+
+## Appendix B
+
+This Appendix contains the data cleaning procedure that we applied in Study 1 and Study 2.
+
+### Study 1
+
+#### CON-task
+
+   Before analyzing the data, we employed the following exclusion criteria. The full dataset comprised `r nrow(fulldat1)` trials from `r length(unique(fulldat1$pers))` participants. First, we excluded data from all participants who gave the same response (either 'creative' or 'not creative') in at least 57/64 ($\approx$ 90%) of the trials. This step removed data from `r nrow(excl1)` individuals. We then removed the first two trials to account for the fact that participants needed time to get acquainted with the task (= `r (length(unique(fulldat1$pers))-nrow(excl1))*2` trials). We also excluded all trials with response times greater than 6 seconds and less than 0.3 seconds to exclude unreasonably fast and slow responses. In this step, `r nrow(dat1_excl1)- nrow(dat1_excl2)` trials were excluded. Finally, we excluded data from individuals with fewer than 47 ($\approx$ 3/4) remaining trials. This last step removed data from `r nrow(excl3)` participants. 
+   
+#### AUT
+
+  $n =$ `r nrow(eff1)-nrow(eff1_aut)` of the participants who completed the CON-task did not complete the AUT. We cleaned the AUT data by removing data from all participants with less than 90 percent valid responses. For example, invalid responses are those where participants responded with associations rather than uses (e.g., 'rectangular' as response for the object 'brick'). We additionally removed all responses that both raters had scored as invalid. As performance indicators, we used the mean originality and mean utility score across raters and responses.    
+
+### Study 2
+
+
+#### CON-task
+
+The full dataset comprised `r nrow(fulldat2)` trials and `r length(unique(fulldat2$pers))` participants. First, we excluded `r nrow(excl1_2)` participants for giving the same response in at least 57/64 ($\approx$ 90%) of the trials. We then removed the first two trials for each participant (= `r (length(unique(fulldat2$pers))-nrow(excl1_2))*2` trials) and all trials with RTs greater than 6 seconds and less than 0.3 seconds (= `r nrow(dat2_excl1_2)- nrow(dat2_excl2)` trials). Finally, data from `r nrow(excl3)` participants were excluded because they had fewer than 47 ($\approx$ 3/4) remaining trials. The sample used to estimate the DDM comprised `r length(unique(dat2$pers))` participants and `r nrow(dat2)` trials. Although we pre-registered to include only data from Dutch native speakers, we retrospectively decided not to exclude data from non-Dutch native speakers as long as they were able to read and respond fluently in Dutch to be as inclusive as possible. Thus, we included all participants who chose to do the Dutch (rather than English) version of the experiment. Participants were required to read an instruction in Dutch in order to do the experiment in Dutch. If they chose the Dutch version, we considered them sufficiently fluent to read and respond in Dutch for our study's purposes where only a few simple phrases had to be read or written in Dutch.
+ 
+
+#### AUT
+
+  In Study 2, $n =$ `r nrow(eff2)-nrow(eff2_aut)` participants  did not complete the AUT. We again cleaned the AUT data by removing data from all participants with less than 90 percent responses that were scored as valid by all raters. Additionally, we again removed all responses that both raters had scored as invalid. As performance indicators, we again used the mean originality and mean utility score across raters and responses.    
+
+## Appendix C
+
+```{r 'COR_table', child = "../Tables/CORtable.Rmd"}
+
+```
+
+\clearpage  

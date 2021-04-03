@@ -1,0 +1,175 @@
+---
+title: "Creative or not, Plot joint posterior"
+output:
+  pdf_document: papaja::apa6_pdf
+  html_document: default
+  word_document: papaja::apa6_word
+---
+```{r 'corOrigUtil', dev = "pdf", dpi = 300,fig.pos="H", fig.cap = "A and C show the multivariate, joint posterior distribution of the originality effects ($\\theta_{OR(i)}$) and utility effects ($\\theta_{UT(i)}$) on the drift rate, in Study 1 and Study 2, respectively. Darker areas indicate greater density. B and D show the individual posterior means of the originality and utility effects including the standard deviations. Each dot represents a participant. The dots are colored according to the results of k-means cluster analysis. Both plots depict the negative correlation between the originality and utility effects.", fig.align = 'center', fig.width = 5, fig.height = 5}
+
+# plotting functions
+nrmlz <- function(mat){
+  tot <- sum(mat)
+  mat/tot
+}
+thetaOriginal <- seq(-.5, 1.1, .02)
+thetaUtility <- seq(-.5, 1.1, .02)
+
+
+probs = c(.5, .7, .9, .95)
+observed <- data.frame(Delta1 = .07, Delta2 = .05)
+myPalette <- rev(c(paste0("grey", round(100*seq(.1, .9, .05)))))
+
+combiThetas <- expand.grid(
+  Originality = thetaOriginal
+  , Utility = thetaUtility
+)
+combiThetas$Density <- NA
+#ggplot skeleton
+makeModelPlot <- function(z, dat, ylab, xlab = NULL, title = NULL, breaks, strip = FALSE, ypos = "left", last = T){
+  graycols <- gray.colors(100, max(.0, .6 - 100 * max(dat$Density))
+                          , max(.7, 1 - 50 * max(dat$Density)))
+  margins <- c(5, 0, -10, 12)
+  margins_last <- c(5, 0, 0, 12)
+  # breaks <- exp(c(-11:(-1), -.1))
+  ggplot(mapping = aes(y = Originality, x = Utility, z = eval(parse(text = z)), fill = ..level..)
+         , data = dat
+  ) +
+    
+    stat_contour(geom = "polygon"
+                 # , breaks = breaks
+    ) +
+    ggtitle(label = title) +
+    geom_hline(yintercept = 0, color = "grey70", size = .3, alpha = .3) +
+    geom_vline(xintercept = 0, color = "grey70", size = .3, alpha = .3) +
+    geom_point(data = observed
+               , mapping = aes(x = Delta2, y = Delta1)
+               , inherit.aes = FALSE
+               , color = ifelse(ypos == "right", "#E41A1C", adjustcolor("white", alpha.f = 0))) +
+    scale_fill_gradientn(colors = rev(graycols)) +
+    coord_fixed() +
+    scale_y_continuous(limits = c(-.5, 1.1)) +
+    scale_x_continuous(limits = c(-.5, 1.1)) +
+    labs(x = xlab, y = ylab) +
+    # facet_grid(Model ~ figType) +
+    theme(
+      legend.position = "none"
+      , plot.title = element_text(face = "bold", hjust = 0.5)
+      , axis.title.x = if(!is.expression(xlab)) element_blank() else element_text()
+      , axis.text.x = if(!is.expression(xlab)) element_blank() else element_text()
+      , axis.ticks.x = if(!is.expression(xlab)) element_blank() else element_line()
+      , strip.text.x = if(!strip) element_blank() else element_text()
+      #, panel.border = element_rect(color = "black", fill = NA)
+      , axis.text.y.right = element_text(hjust = 1)
+      , panel.spacing = unit(10, "points")
+      # , panel.spacing = unit(rel(10), "points")
+      #, strip.text.y = ggplot2::element_text(margin = ggplot2::margin(0, 0, 0, 0))
+      #, axis.title.y = element_text(margin = margin(t = 0, r = 0, b = 0, l = 0))
+      #, plot.margin = unit(if(last == T){margins_last}else{margins}, "points")
+      # , strip.text.y = ggplot2::element_text(margin = ggplot2::margin(0, 0, 0, ggplot2::rel(12)))
+    )
+}
+
+# plots for S1
+norm <- function(x, Sigma) dmvnorm(x[1:2], c(FEsummary1[4,1], FEsummary1[5,1]), Sigma)
+Sigma <- matrix(c(REsummary1[2,1]^2, REsummary1[2,1] * REsummary1[3,1] * REsummary1[7,1], REsummary1[2,1] * REsummary1[3,1] * REsummary1[7,1], REsummary1[3,1]^2), nrow = 2, byrow = T)
+GeneralH <- apply(combiThetas, 1, norm, Sigma = Sigma)
+GeneralH <- nrmlz(GeneralH)
+combiThetas$Density <- GeneralH
+
+Cor.orig.util.d1 <- makeModelPlot(z = "Density"
+                           , dat = combiThetas
+                           , title = "A."
+                           , ylab = expression(theta[OR(i)])
+                           , xlab = expression(theta[UT(i)])
+                           , breaks = rev(breaks))
+
+clus1 <- kmeans(x = cbind(eff1$Estimate.util.rating_s, eff1$Estimate.orig.rating_s), centers = 2, nstart = 20)
+Cor.orig.util1.c <- 
+  ggplot(eff1, aes(x = Estimate.util.rating_s, y = Estimate.orig.rating_s, color = factor(clus1$cluster))) +
+  ggtitle("B.") +
+  geom_point(size = 0.8) +
+  #geom_point(size = 3, aes(x = clus1$centers[1,1], y = clus1$centers[1,2]), color = "#72bcd4") +
+  #geom_point(size = 3, aes(x = clus1$centers[2,1], y = clus1$centers[2,2]), color = "#4333a8") +
+  scale_color_manual(values = c("#72bcd4", "#4333a8")) +
+  geom_errorbar(aes(ymin= Estimate.orig.rating_s-Est.Error.orig.rating_s, ymax= Estimate.orig.rating_s+Est.Error.orig.rating_s, color = factor(clus1$cluster)), size = 0.1) +
+  geom_errorbarh(aes(xmin= Estimate.util.rating_s-Est.Error.util.rating_s, xmax = Estimate.util.rating_s+Est.Error.util.rating_s, color = factor(clus1$cluster)), size = 0.1) +
+  scale_x_continuous(expression(theta[UT(i)]), limits = c(-.5, 1.1)) +
+  scale_y_continuous(expression(theta[OR(i)]), limits = c(-.5, 1.1)) +
+  theme(aspect.ratio=1,
+        plot.title = element_text(face = "bold", hjust = 0.5),
+        panel.grid.minor = element_blank(),
+        #panel.border = element_rect(color = "black", fill = NA),
+        panel.spacing = unit(10, "points"),
+        axis.text.y.right = element_text(hjust = 1),
+        legend.position = "none") +
+  geom_hline(yintercept = 0, color = "grey70", size = .3, alpha = .3) +
+  geom_vline(xintercept = 0, color = "grey70", size = .3, alpha = .3)
+
+
+# Plots for S2
+norm <- function(x, Sigma) dmvnorm(x[1:2], c(FEsummary2[4,1], FEsummary2[5,1]), Sigma)
+Sigma <- matrix(c(REsummary2[2,1]^2, REsummary2[2,1] * REsummary2[3,1] * REsummary2[8,1], REsummary2[2,1] * REsummary2[3,1] * REsummary2[8,1], REsummary2[3,1]^2), nrow = 2, byrow = T)
+GeneralH <- apply(combiThetas, 1, norm, Sigma = Sigma)
+GeneralH <- nrmlz(GeneralH)
+combiThetas$Density <- GeneralH
+
+Cor.orig.util.d2 <- makeModelPlot(z = "Density"
+                           , dat = combiThetas
+                           , title = "C."
+                           , ylab = expression(theta[OR(i)])
+                           , xlab = expression(theta[UT(i)])
+                           , breaks = rev(breaks))
+
+clus2 <- kmeans(x = cbind(eff2$Estimate.util.rating_s, eff2$Estimate.orig.rating_s), centers = 2, nstart = 20)
+Cor.orig.util2.c <- 
+  ggplot(eff2, aes(x = Estimate.util.rating_s, y = Estimate.orig.rating_s, color = factor(clus2$cluster))) +
+  ggtitle("D.") +
+  geom_point(size = 0.8, alpha = 0.6) +
+  #geom_point(size = 3, aes(x = clus2$centers[1,1], y = clus2$centers[1,2]), color = "#72bcd4") +
+  #geom_point(size = 3, aes(x = clus2$centers[2,1], y = clus2$centers[2,2]), color = "#4333a8") +
+  scale_color_manual(values = c("#4333a8", "#72bcd4")) +
+  geom_errorbar(aes(ymin= Estimate.orig.rating_s-Est.Error.orig.rating_s, ymax= Estimate.orig.rating_s+Est.Error.orig.rating_s, color = factor(clus2$cluster)), size = 0.1) +
+  geom_errorbarh(aes(xmin= Estimate.util.rating_s-Est.Error.util.rating_s, xmax = Estimate.util.rating_s+Est.Error.util.rating_s, color = factor(clus2$cluster)), size = 0.1) +
+  scale_x_continuous(expression(theta[UT(i)]), limits = c(-.5, 1.1)) +
+  scale_y_continuous(expression(theta[OR(i)]), limits = c(-.5, 1.1)) +
+  theme(aspect.ratio=1,
+        plot.title = element_text(face = "bold", hjust = 0.5),
+        panel.grid.minor = element_blank(),
+        #panel.border = element_rect(color = "black", fill = NA),
+        panel.spacing = unit(10, "points"),
+        axis.text.y.right = element_text(hjust = 1),
+        legend.position = "none") +
+  geom_hline(yintercept = 0, color = "grey70", size = .3, alpha = .3) +
+  geom_vline(xintercept = 0, color = "grey70", size = .3, alpha = .3)
+
+plot_grid(Cor.orig.util.d1, Cor.orig.util1.c, Cor.orig.util.d2, Cor.orig.util2.c, nrow = 2)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

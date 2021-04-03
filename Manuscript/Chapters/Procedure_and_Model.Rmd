@@ -1,0 +1,80 @@
+---
+title: "Creative or not, Procedure and Model Study 1"
+output:
+  pdf_document: papaja::apa6_pdf
+  html_document: default
+  word_document: papaja::apa6_word
+---
+# General Method
+
+## Bayesian Hierarchical Diffusion Modeling of the CON-task 
+  The DDM conceptualizes the response process in the CON-task as an interaction of several unobservable cognitive processes. Each of these is represented by a parameter (see Figure \@ref(fig:DDMfigure)). We use the simplest complete version of the DDM comprising four parameters [@WabersichVandekerckhove:2014]. First, the model assumes that the decision whether a use is creative or not is initially determined by $\beta$. The $\beta$ parameter stands for the a priori bias towards either of the decision options, so for the CON-task this is a preference for choosing “Yes, creative” or “No, not creative”. Second, the parameter $\delta$ stands for the drift rate. It reflects the tendency to respond 'creative' or 'not creative'. The higher the absolute drift rate, the faster the creativity evaluation, and the stronger the evidence for the decision. The DDM assumes that during each evaluation, noisy information is gradually accumulated. This accumulation ends when either of the two boundaries (i.e., “Yes, creative” or “No, not creative”) is reached. Third, the boundary separation parameter $\alpha$ reflects the distance between the two response boundaries and can be interpreted as response caution. For example, individuals who generally take longer to evaluate creativity, would have a greater boundary separation. Finally, the parameter $\tau$ refers to the non-decision time. This parameter aims to capture the processes taking place before and after the actual decision process whether something is creative or not, such as stimulus encoding and motor control processes. In sum, the DDM conceptualizes the process of judging whether a use is creative or not as a continuous random movement that begins somewhere between two boundaries and ends as soon as either of them is reached [@WabersichVandekerckhove:2014].  
+  In this paper, the most central DDM parameter is the drift rate. The assumption is that stimulus originality and utility both positively affect the drift rate in that the more original and useful a CON-task stimulus is, the more positive the drift rate. Moreover, the drift rate is the only model parameter that we expect to be influenced by stimulus characteristics because the remaining parameters are already set before the decision of whether something is creative or not takes place [e.g., @VandekerckhoveEtAl:2011].
+  
+### Bayesian hierarchical modeling 
+  We estimated the model in a Bayesian hierarchical framework [@Lee:2011; @RouderLu:2005; @VandekerckhoveEtAl:2011], allowing us to examine the data both at the population-level and at the individual-level. Hierarchical modeling provides rather conservative estimates of individual differences because it shrinks the individual effects towards the population mean [e.g., @EfronMorris:1977; @HaafRouder:2018].  
+  We chose Bayesian estimation for two reasons. First, even without a hierarchical extension, applying the DDM to data is computationally expensive [e.g., @Tuerlinckx:2004]. Extending it hierarchically makes the model quickly intractable when using the frequentist approach of maximum likelihood estimation  [@VandekerckhoveEtAl:2011]. Second, Bayesian inference has several advantages such as an intuitive treatment of uncertainty regarding the model parameters [@Wagenmakers:2009].
+
+## Model Specification
+
+A detailed and complete model specification of the DDM used in Study 1 and 2 can be found in Appendix A. Here, we describe how we decomposed the drift rate parameter and the hierarchical structure of the model. To explore the influence of originality and utility when judging creativity in the CON-task, we regressed the drift rate on the originality and utility ratings of the stimuli. In both studies, we included random intercepts as well as random slopes to explore individual differences. Furthermore, because the response times and proportions of 'creative' responses vary considerably across the 64 CON-task stimuli, we also included random intercepts pertaining to the stimuli.   
+  In both studies, we decomposed the drift rate as follows. Let $\delta_{(ij)}$ denote the drift rate for the $i$th participant, $i= 1, ..., I$, in the $j$th trial or stimulus, $j= 1, ...,64$, of the CON-task, then   
+
+\[\delta_{(ij)} = \theta_{\delta(i)} + \phi_{\delta(j)} + \theta_{OR(i)} z_{OR} + \theta_{UT(i)}z_{UT}.\]
+
+  The parameters $\theta_{\delta(i)}$, $\theta_{OR(i)}$, and $\theta_{UT(i)}$ reflect participant $i$'s drift rate decomposition. Specifically, $\theta_{\delta(i)}$ denotes the drift rate intercept, $\theta_{OR(i)}$ the originality effect, and $\theta_{UT(i)}$ the utility effect of individual $i$. Furthermore, $\phi_{\delta(j)}$ is stimulus $j$'s individual deviation from the drift rate intercept. Lastly, $z_{OR}$ and $z_{UT}$ refer to z-scores of the originality and utility ratings of the stimuli.  
+  For most of the remaining DDM parameters, we also incorporated random effects to examine individual differences. In particular, we allowed the boundary separation and the bias parameter to vary across individuals. However, in Study 1, we fixed the bias at the population level because we encountered identifiability issues when estimating random effects for $\beta$. We discuss these issues subsequently. Furthermore, in neither of the studies, we included random effects pertaining to the non-decision time parameter $\tau$ in the model. Instead, we constrained $\tau$ to be constant across participants because interpreting random effects for this parameter has shown to be problematic [@Singmann:2018a].  
+  To examine the interplay of the DDM parameters across participants, we also allowed the random effects pertaining to individuals to be correlated. As such, we assume that the individual effects are drawn from the same multivariate normal distribution with population means $[\mu_\delta, \mu_{\theta_{OR}}, \mu_{\theta_{UT}}, \mu_\alpha, \mu_\beta]^T$ and a variance-covariance matrix $\boldsymbol\Sigma$, i.e.,
+
+\[\begin{bmatrix} 
+\theta_{\delta(i)} \\
+\theta_{OR(i)} \\
+\theta_{UT(i)} \\
+\alpha_{(i)} \\
+\beta_{(i)}
+\end{bmatrix} 
+\sim
+\mbox{Multivariate-Normal} \begin{pmatrix} 
+\begin{bmatrix} 
+\mu_\delta \\
+\mu_{\theta_{OR}} \\
+\mu_{\theta_{UT}} \\
+\mu_\alpha \\
+\mu_\beta
+\end{bmatrix},
+\boldsymbol{\Sigma}
+\end{pmatrix}.
+\]
+  
+  $\boldsymbol{\Sigma}$ allows for correlations across the random effects pertaining to the individuals. The random effects of the stimuli are orthogonal to the individual random effects. They are also assumed to be randomly sampled from a population distribution (of stimuli),
+  
+\[\phi_{\delta(j)} \sim \mbox{Normal}(0, \sigma_{\delta(j)}),\]
+
+where 0 is the mean and $\sigma_{\delta(j)}$ is the standard deviation.  
+  Since we estimated the model in the Bayesian framework, we needed to specify a prior distribution for each parameter. For Study 1, we used weakly informative priors that restricted the parameter space to a plausible range (see Appendix A). For Study 2, we used the insights gained from Study 1 and specified informative priors to test hypotheses in the Bayesian setting. We dicuss these prior choices subsequently as well as in Appendix A.  
+  
+# Study 1
+
+## Data Collection Procedure and Materials 
+
+```{r}
+fulldat1 <- read.csv("../Data/Study1/CON_S1.csv")
+```
+ The data used for the DDM modeling in Study 1 was gathered as part of a joint data collection effort by the faculty of Psychology at the University of Amsterdam. Data collection took place over different sessions throughout 2016. The full sample consisted of `r length(unique(fulldat1$pers))` first year psychology students. The age range was 17.80- 41.35 years, (*M* = 20.38, *SD* = 2.59. Participants received course credit for their participation.
+
+### Alternative Uses Task
+ Participants completed a computerized version of the Alternative Uses Task [AUT; @Guilford:1967] used to assess their divergent thinking performance. The name of an object was presented on the screen, and participants had two minutes to type as many creative uses for the object as possible (e.g., the use 'bath toy' for the object 'brick'). Over the course of a year, a total of four objects were administered. Depending on the sessions the students participated in, they completed the task with a different object. Most participants completed the task for two objects, a few participants completed it only once. The objects for which participants were asked to generate uses were 'brick', 'fork', 'towel', and 'paperclip'. Generated solutions were listed on the screen and new ones were continuously added. Two independent raters who were unaware of the research questions/hypotheses of this study separately scored participants' answers with respect to originality and utility on a five-point scale (1 = not original/useful, 5 = very original/useful). Invalid responses were coded as 0. The interrater reliabilities (ICC) for the originality scores were .65, .68, .73 and .66 for 'brick', 'fork', 'paperclip' and 'towel' respectively.  For utility scores the corresponding ICCs were .53, .60, .82 and .67 for 'brick', 'fork', 'paperclip' and 'towel' respectively. 
+
+### Creative-or-not Task
+```{r, include = F}
+stimuli <- read.csv("../Data/stimuli.csv")
+cor.orig.util <- correlationBF(stimuli$orig.rating, stimuli$util.rating, posterior = T, iterations = 10000)
+
+BF.cor.orig.util <- correlationBF(stimuli$orig.rating, stimuli$util.rating)
+```
+  Participants completed `r nrow(stimuli)` trials of the CON-task. RTs as well as responses ('creative' or 'not creative') were recorded. Trials automatically counted as missing when participants did not answer within nine seconds. The stimuli used had been generated from a collection of AUT responses. Their originality and utility had been scored on a scale from 1 to 5 by two raters independently. The ICC was .81 for originality and .65 for utility. As stimulus ratings, we took the average originality and utility rating, respectively, across raters. The mean originality rating of the stimuli was $M=$ `r mean(stimuli$orig.rating)` ($SD=$ `r sd(stimuli$orig.rating)`), and the mean utility rating was $M=$ `r mean(stimuli$util.rating)` ($SD=$ `r sd(stimuli$util.rating)`). Stimulus originality and utility was negatively correlated, $r =$ `r mean(cor.orig.util[,"rho"])`, 95% credible interval (CrI) [`r quantile(cor.orig.util, probs = 0.025)`, `r quantile(cor.orig.util, probs = 0.975)`] `r apa_print(BF.cor.orig.util)$full_result`[^l].
+
+### Importance Ratings of Originality and Utility
+  Participants also indicated, separately, how important they thought originality, utility, innovativeness, and appropriateness were when evaluating creativity (1 = not important at all to 5 = very important).
+  
+[^l]: Here and for all subsequently reported correlations, we conducted Bayesian correlation analyses using the Bayes factor package including the default prior scale (Morey & Rouder, 2018). Specifically, we used Bayes factors to quantify the evidence for a correlation ($H_1: \rho \neq 0$) as opposed to no correlation ($H_0: \rho = 0$; ) and report it together with the posterior mean of the correlation coefficient and the corresponding credible interval.

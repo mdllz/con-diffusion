@@ -1,0 +1,51 @@
+---
+title: "Creative or not, Probit model"
+output:
+  pdf_document: papaja::apa6_pdf
+  html_document: default
+  word_document: papaja::apa6_word
+---
+```{r setup 3, include=FALSE, echo =F}
+knitr::opts_chunk$set(echo = FALSE, include = FALSE)
+```
+
+
+```{r, cache = T, echo = F}
+formula <- bf(creative ~ 1 + orig.rating_s + util.rating_s + (1|itemid) + (1 + orig.rating_s + util.rating_s|pers))
+
+prior <- c(
+  prior("lkj(3)", class = "cor"),
+  prior("normal(0, 0.3)", class = "b"),
+  prior("normal(0, 0.3)", class = "sd"),
+  set_prior("normal(0, 0.3)", class = "Intercept"))
+
+
+
+
+fit_probit1 <- brm(formula, 
+                  data = dat1, 
+                  family = bernoulli("probit"),
+                  prior = prior,
+                  iter = 3000, warmup = 1000, chains = 4, cores = 4, sample_prior = T)
+
+```
+
+
+```{r, cache = T, echo = F}
+formula <- bf(creative ~ 1 + orig.rating_s + util.rating_s + (1|itemid) + (1 + orig.rating_s + util.rating_s|pers))
+
+prior <- c(
+  prior("lkj(3)", class = "cor"),
+  prior("normal(0, 0.3)", class = "b"),
+  prior("normal(0, 0.3)", class = "sd"),
+  set_prior("normal(0, 0.3)", class = "Intercept"))
+
+
+fit_probit2 <- brm(formula, 
+                  data = dat2, 
+                  family = bernoulli("probit"),
+                  prior = prior,
+                  iter = 3000, warmup = 1000, chains = 4, cores = 4, sample_prior = T)
+
+```
+

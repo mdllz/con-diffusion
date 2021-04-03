@@ -1,0 +1,124 @@
+---
+title             : "Creative or Not? Hierarchical Diffusion Modeling of the Creative Evaluation Process"
+shorttitle        : "Creative or Not?"
+
+author: 
+  - name          : "Michelle C. Donzallaz"
+    affiliation   : "1"
+  - name          : "Julia M. Haaf"
+    affiliation   : "1"
+  - name          : "Claire E. Stevenson"
+    affiliation   : "1"
+    address       : "Nieuwe Achtergracht 129-B, 1018 WS Amsterdam"
+    corresponding : yes   # Define only one corresponding author
+    email         : "c.e.stevenson@uva.nl"  
+affiliation:
+  - id            : "1"
+    institution   : "University of Amsterdam"
+  
+authornote: |
+  This report was written in R-Markdown with code for data analysis integrated into the text. The source code and the data can be found at: https://osf.io/73c2d/. The research reported in this manuscript has been presented at the virtual MathPsych/ICCM conference in 2020.
+   
+note: "Draft version 1, April 2021. This paper has not been peer reviewed. Please do not copy or cite without authors' permission."   
+
+abstract: |
+  When producing creative ideas (i.e., ideas that are original and useful) two main processes occur: ideation, where people brainstorm ideas, and evaluation, where they decide if the ideas are creative or not. While much is known about the ideation phase, the cognitive processes involved in creativity evaluation are largely unclear. In this paper, we present a novel modeling approach for the evaluation phase of creativity. We apply the drift diffusion model (DDM) to the creative-or-not (CON)-task to study the cognitive basis of evaluation and to examine individual differences in the extent to which people take originality and utility into account when evaluating creative ideas. The CON-task is a timed decision-making task where participants indicate whether they find uses for certain objects creative or not (e.g., using a book as a buoy). The different use items vary on the two creativity dimensions ‘originality’ and ‘utility’. In two studies (*n* = 293, 17806 trials; *n* = 152, 9291 trials), we found that stimulus originality was strongly related to participants’ drift rate, whereas stimulus utility was only somewhat associated with the drift rate. However, participants differed substantially in the effects of originality and utility. Furthermore, the implicit weights assigned to originality and utility on the CON-task were aligned with self-reported importance ratings of originality and utility and associated with divergent thinking performance. Our findings underline the importance of communicating rating criteria in divergent thinking tasks such as the alternative uses task to ensure a fair assessment of creative ability. 
+  
+  <!-- https://tinyurl.com/ybremelq -->
+  
+bibliography      : ["references.bib", "r-references.bib"]
+
+keywords          : "creativity, evaluation, diffusion model, Bayesian hierarchical modeling"
+floatsintext      : yes
+figurelist        : no
+tablelist         : no
+footnotelist      : no
+figsintext        : yes
+linenumbers       : no
+mask              : no
+draft             : no
+header-includes:
+  - \raggedbottom
+
+documentclass     : "apa6"
+classoption       : "man, noextraspace"
+output            : papaja::apa6_pdf
+---
+
+```{r 'setup', include = FALSE}
+library("papaja")
+# knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
+```
+
+```{r 'analysis-preferences', message = F, warning = F}
+library("brms")
+library("rstan")
+library("here")
+library("tidyr")
+library("dplyr")
+library("tibble")
+library("bayesplot")
+library("cowplot")
+library("mvtnorm")
+library("msm")
+library("ggplot2")
+library("gridExtra")
+library("DescTools")
+library("magrittr")
+library("psych")
+library("BayesFactor")
+library("stringr")
+library("corrplot")
+
+#r_refs(file = "r-references.bib")
+my_citation <- cite_r(file = "r-references.bib")
+```
+\raggedbottom
+
+```{r 'Intro', child="Chapters/Introduction.Rmd"}
+```
+
+
+
+```{r 'Model and Procedure S1', child="Chapters/Procedure_and_Model.Rmd"}
+```
+
+## Results Study 1
+```{r 'Results S1', child="Chapters/Results.Rmd"}
+```
+
+
+```{r 'Model and Procedure S2', child="Chapters/Procedure_and_ModelS2.Rmd"}
+```
+
+## Results Study 2
+
+```{r 'Results S2', child="Chapters/ResultsS2.Rmd"}
+```
+
+\clearpage 
+
+# Discussion
+
+```{r 'Conclusion', child="Chapters/Discussion.Rmd"}
+```
+
+\clearpage
+
+# Appendices
+```{r 'Appendix', child="Chapters/Appendix.Rmd"}
+
+```
+
+\clearpage  
+
+# References
+
+\begingroup
+\setlength{\parindent}{-0.5in}
+\setlength{\leftskip}{0.5in}
+
+<div id = "refs"></div>
+\endgroup
+
+

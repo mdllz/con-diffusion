@@ -1,0 +1,30 @@
+---
+title: "Creative or not, Procedure and model Study 2"
+output:
+  pdf_document: papaja::apa6_pdf
+  html_document: default
+  word_document: papaja::apa6_word
+---
+
+# Study 2
+
+Based on what we had learned from Study 1 and based on previous research, we expected positive effects of stimulus originality (H1) and stimulus utility (H2) on the drift rate. We also expected the effect of stimulus originality to be larger than the effect of stimulus utility (H3). Furthermore, given the observed substantial negative correlation between the individual stimulus originality and utility effects in Study 1, we expected a negative correlation among those effects in Study 2 (H4). Specifically, we hypothesized that the greater an individuals’ effect of stimulus originality on the drift rate, the smaller the effect of stimulus utility would be and vice versa. Since in Study 1, we observed substantial individual differences in the extent to which stimulus originality and utility influenced the drift rate, we also expected non-zero variability across individuals in those effects (H5a and H6a).  
+  Previous research suggests that originality plays a superior role in creativity judgments compared to utility [e.g., @CaroffBesancon:2008; @DiedrichEtAl:2015; @RuncoCharles:1993]. Based on these findings we tested the hypothesis that everyone would have a positive effect of stimulus originality on the drift rate [H5b; @HaafRouder:2017; @HaafRouder:2018]. Note that this hypothesis deviated from Study 1’s findings where some people even seemed to have a negative effect. Regarding the effects of stimulus utility on the drift rate, we expected that some individuals would have a positive effect, some a negative effect, and some no effect (H6b).
+Given Study 1’s results, we also expected that individuals’ stimulus originality and utility effects would be positively associated with their self-reported importance ratings of originality and utility for creativity. More specifically, we expected  individual originality effects on the drift rate would increase as the self-reported importance ratings of originality increase (H7a), and individual utility effects on the drift rate would increase as the importance ratings of utility increase (H7b).  
+  Finally, we specified hypotheses regarding the association between CON-task judgements and AUT performance. We expected that originality scores on the AUT would be positively correlated with stimulus originality effects and negatively correlated with stimulus utility effects on drift rates (H8a and H8b). Similarly, we expected that AUT utility scores would be positively correlated with stimulus utility effects on CON-task drift rates and negatively correlated with stimulus originality effects (H9a and H9b). Note that Study 1 did not support H9a and H9b. However, in both cases, we did not consider the evidence for the null to be convincing. We still expected that the more useful one’s AUT responses are, the more one values utility when judging creativity and the more one disregards originality. Study 2 served as a robustness check for this belief.
+
+
+## Data Collection Procedure and Materials 
+
+```{r}
+fulldat2 <- read.csv("../Data/Study2/CON_S2.csv")
+```
+
+Data collection was again centrally organized by the faculty of Psychology at the University of Amsterdam and took place over different sessions throughout 2019. All tasks related to creativity were administered during the same session in the order listed below. In total, `r length(unique(fulldat2$pers))` first-year psychology students completed the CON-task, the age range was 17.87- 47.04 years, (*M* = 20.50, *SD* = 2.98, and participants again received course credit for their participation.
+
+**Alternative-Uses-Task** Participants completed the AUT (Guilford, 1967) for the objects 'brick' and 'paperclip' and were again given two minutes for each object. Two independent raters who were unaware of the research questions/hypotheses of this study again separately scored participants' answers with respect to originality and utility on a five-point scale and coded invalid responses as zero. The interrater agreement can be considered good: for the object 'brick', the ICC was 0.67 for originality and 0.64 for utility. For the object 'paperclip the ICC was 0.73 for originality and 0.71 for utility. 
+
+**Creative-Or-Not task** Participants again completed the same 64 stimuli as the participants in Study 1.
+
+**Self-reported importance-ratings** On four separate items, participants again indicated how important they thought originality, innovativeness, appropriateness, and utility were when deciding whether something is creative or not.
+

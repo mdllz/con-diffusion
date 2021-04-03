@@ -1,0 +1,117 @@
+---
+title: "Creative or not, est with excluded participants"
+output:
+  pdf_document: papaja::apa6_pdf
+  html_document: default
+  word_document: papaja::apa6_word
+---
+
+```{r 'setup excl pers'}
+knitr::opts_chunk$set(echo = F, include = F)
+```
+
+```{r}
+## same response in at least 90% of the trials
+excl1 <- fulldat2 %>%
+  group_by(pers) %>%
+  summarize(countCreative = sum(creative)/n(), 
+            countNotCreative = 1-(sum(creative)/n())) %>%
+  filter(countCreative >= 0.9 | countNotCreative >= 0.9)
+
+# exclude participants based on 90% criterion and remove first two responses
+dat2_excl1 <- fulldat2 %>% 
+  filter(!(pers %in% excl1$pers)) %>%
+# remove first two trials
+  group_by(pers) %>% 
+  slice(3:n()) %>% 
+  ungroup()
+
+# remove RT > 6s and < 0.3s
+dat2_excl <- dat2_excl1 %>% 
+  filter(rt <= 6000  &  rt > 300)
+```
+
+```{r, cache = T, eval = TRUE}
+# turn variables into factor and create numeric response variable for estimation
+dat2_excl$pers <- as.factor(dat2_excl$pers)
+dat2_excl$itemid <- as.factor(dat2_excl$itemid)
+dat2_excl$rt <- as.numeric(dat2_excl$rt)/1000
+dat2_excl$creative <- as.numeric(dat2_excl$creative)
+
+# model formula
+formula <- bf(rt | dec(creative) ~ 1 + (1|itemid) + orig.rating_s + util.rating_s + (1 + orig.rating_s + util.rating_s|p|pers),
+              bs ~ 1 + (1|p|pers),
+              bias ~ 1 + (1|p|pers))
+
+# get_prior(formula,
+#           data = dat2_excl, 
+#           family = wiener(link_bs = "identity",
+#                           link_ndt = "identity",
+#                           link_bias = "identity"))
+# set priors
+prior <- c(
+  prior("lkj(3)", class = "cor"),
+  prior("normal(0, 0.2)", class = "b", lb = 0),
+  prior("normal(0, 0.3)", class = "sd"),
+  set_prior("normal(0, 1)", class = "Intercept"),
+  set_prior("beta(1, 1)", class = "Intercept", dpar = "bias"),
+  set_prior("normal(0, 2)", class = "Intercept", dpar = "bs"),
+  set_prior("normal(0, 0.3)", class = "sd", dpar =  "bias"),
+  set_prior("normal(0, 0.3)", class = "sd", dpar =  "bs"),
+  set_prior("normal(0, 0.3)", class = "sd", group = "pers"),
+  set_prior("normal(0, 0.3)", class = "sd", group = "itemid"),
+  set_prior("uniform(0, 300)", class = "ndt"))
+
+make_stancode(formula,
+              family = wiener(link_bs = "identity",
+                              link_ndt = "identity",
+                              link_bias = "identity"),
+              data = dat2_excl,
+              prior = prior)
+
+initfun <- function() {
+  list(
+    b = rtnorm(2, mean = 0, sd = 0.5, lower = 0),
+    Intercept_bs = runif(tmp_dat$K_bs, 1, 2),
+    ndt = 0.01,
+    Intercept_bias = 0.5,
+    L_2 = diag(tmp_dat$M_2),
+    z_2 = matrix(rnorm(tmp_dat$M_2*tmp_dat$N_2, 0, 0.01),
+                 tmp_dat$M_2, tmp_dat$N_2)
+  )
+}
+
+tmp_dat <- make_standata(formula, 
+                         family = wiener(link_bs = "identity",
+                                         link_ndt = "identity",
+                                         link_bias = "identity"),
+                         data = dat2_excl, prior = prior)
+# model estimation
+fit_wiener_excl <- brm(formula, 
+                   data = dat2_excl,
+                   family = wiener(link_bs = "identity", 
+                                   link_ndt = "identity",
+                                   link_bias = "identity"),
+                   prior = prior, inits = initfun,
+                   iter = iter2, warmup = warmup2, chains = chains2, cores = cores2, sample_prior = T,
+                   control = list(max_treedepth = max_td2, adapt_delta = adapt_d2))
+
+save(fit_wiener_excl, file = "fit_wiener_excl2.Rda", compress = "xz")
+
+```
+
+```{r 'load model from S2'}
+wienermodel2_excl <- fit_wiener_excl
+load("../../Analysis/wienermodel2.Rda")
+```
+
+```{r 'S2 hypotheses tests  CON task', include = F}
+# H2
+h2 <- hypothesis(fit_wiener_excl, "util.rating_s = 0")
+plot(h2)
+1/h2$hypothesis$Evid.Ratio
+```
+
+
+
+

@@ -1,0 +1,157 @@
+---
+title             : "Supplementary Materials: Creative or Not? Hierarchical Diffusion Modeling of the Creative Evaluation Process"
+shorttitle        : "Supplementary Materials: Creative or Not?"
+
+author: 
+  - name          : "Michelle C. Donzallaz"
+    affiliation   : "1"
+  - name          : "Julia M. Haaf"
+    affiliation   : "1"
+  - name          : "Claire E. Stevenson"
+    affiliation   : "1"
+    corresponding : yes   # Define only one corresponding author
+    address       : "Nieuwe Achtergracht 129-B, 1018 WS Amsterdam"
+    email         : "c.e.stevenson@uva.nl"  
+affiliation:
+  - id            : "1"
+    institution   : "University of Amsterdam"
+  
+authornote: |
+  Supplementary materials of the paper 'Creative or Not? Hierarchical Diffusion Modeling of the Creative Evaluation Process'.  
+  
+note: "Draft version 1, April 2021. This paper has not been peer reviewed. Please do not copy or cite without authors' permission."  
+
+floatsintext      : yes
+bibliography      : ["../references.bib"]
+figurelist        : no
+tablelist         : no
+footnotelist      : no
+figsintext        : yes
+linenumbers       : no
+mask              : no
+draft             : no
+header-includes:
+  - \raggedbottom
+
+documentclass     : "apa6"
+classoption       : "man, noextraspace"
+output            : papaja::apa6_pdf
+---
+
+```{r 'setup', include = FALSE}
+library("papaja")
+library("dplyr")
+library("tidyr")
+library("tibble")
+library("ggplot2")
+library("gridExtra") # for grid.arrange
+library("DescTools")
+library("brms")
+library("rstan")
+library("cowplot")
+library("BayesFactor")
+# knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
+```
+
+```{r 'fit assessment analyses', child = "./Analysis-supplementary-materials/FitAssessmentS1.Rmd"}
+
+```
+
+```{r 'fit assessment analyses 2', child = "./Analysis-supplementary-materials/FitAssessmentS2.Rmd"}
+
+```
+
+# Posterior predictive checks
+
+Here we describe how we assessed the fit of the drift diffusion model (DDM) applied in Study 1 and 2 using posterior predictive checks. We followed the procedure described by [@Singmann:2018]. The overall goal of the check was to examine whether the model was able to adequately describe the observed data. To this end, we obtained 500 samples from the posterior predictive distribution in both Study 1 and Study 2.
+  In a first step, we examined whether the model could reproduce the general RT and response proportion pattern observed in the data. To do so, we calculated three summary statistics for all samples of the posterior predictive distribution. The summary statistics were (1) the proportion of 'creative' responses, (2) the median RT for 'creative' responses, and (3) the median RT for 'not creative' responses. We then summarized these statistics across the posterior predictive distribution by computing the mean for the proportion of 'creative' responses and the median for the RTs. Next, we calculated the same summary statistics for the observed data. Figure \@ref(fig:FAplot1) shows the three summary statistics of the predictions (in black and grey) and of the data (in red) for Study 1 and Figure \@ref(fig:FAplot12) shows the same for Study 2. Overall, the models were able to adequately describe the general patterns in the data.  
+  
+```{r 'plotFA1', child = "./Figures-supplementary-materials/plotFitAssessment1S1.Rmd"}
+
+```
+
+```{r 'plotFA1 2', child = "./Figures-supplementary-materials/plotFitAssessment1S2.Rmd"}
+
+```
+  
+  In a second step, we also examined the predicted response proportions on the participant level by inspecting the proportion of "creative" responses for each  participant separately. Again the models were able to reproduce the data well as they predicted the medians quite accurately. 
+  Next, we computed the coverage probabilities of the three summary statistics across participants [@Singmann:2018]. For each of the statistics and for different credible intervals (CrIs), we calculated whether the three observed statistics were covered by the corresponding CrI. The coverage probabilities are shown in Table \@ref(tab:covgtable) for Study 1 and in Table \@ref(tab:covgtable2) for Study 2. In both datasets, they corresponded with the width of the CrIs and even above. For several measures, the coverage probability was even 1 for the 95% and the 99% CrIs in both datasets/studies.
+
+```{r 'tablecoverage', child  = "./Tables-supplementary-materials/CoveragetableS1.Rmd"}
+```
+
+```{r 'tablecoverage 2', child  = "./Tables-supplementary-materials/CoveragetableS2.Rmd"} 
+
+```
+ 
+  Lastly, we assessed the model fit by inspecting more RT quantiles than just the median [@Singmann:2018]. More specifically, we examined the observed and predicted RT quantiles (i.e., the 10th, 25th, 75th, and 90th) across participants. We first computed the quantiles for each sample of the posterior predictive distribution and then aggregated them. To assess how much the observed and predicted quantiles matched, we calculated the concordance correlation coefficient for each quantile [CCC; e.g., @Barchard:2012]. The CCC indicates the extent of absolute agreement between two values and ranges from -1 to 1, whereby CCC = 0 stands for no agreement, CCC = 1 for perfect agreement, and CCC = -1 for perfect disagreement. Figure \@ref(fig:FAplot2) and Figure \@ref(fig:FAplot22) show a QQ-plot for each quantile and for each response option. In general and across studies, the fit was slightly better for the 'creative' responses compared to the 'not creative' responses. The model fit was best for the medians and worst for the 10th quantiles. At the 10th and 25th quantiles, the predicted RTs were smaller than the observed ones which could be a sign of shrinkage. At the 75th quantiles, on the other hand, the model predicted slightly slower RTs than were observed, which could indicate some bias in the model.  All in all, the model appeared to provide a good account of the data. Apart from some misfit in the outer quantiles, the model could reproduce the RTs and responses well.  
+
+```{r 'plotFA2', child = "./Figures-supplementary-materials/plotFitAssessment2S1.Rmd"}
+
+```
+
+```{r 'plotFA2 2', child = "./Figures-supplementary-materials/plotFitAssessment2S2.Rmd"}
+```
+ 
+
+\clearpage
+
+# Model Estimation Including Participants Who Were Excluded Based on Too Few Trials
+
+```{r 'est excl pers', child = './Analysis-supplementary-materials/Est-excluded-pers.Rmd'}
+
+```
+
+We re-did the key analyses including the participants that we had excluded based on too few trials (<47) to examine whether we would have arrived at the same conclusions had we included them. As shown in Table \@ref(tab:resFEtablesupp), \@ref(tab:resREtablesupp), and \@ref(tab:resCORtablesupp), the model estimation results differ only slightly.  
+  The posterior means of the originality and utility effects on the drift rate were identical for the utility effect and differed only slightly for the originality effect. Furthermore, the posterior mean of the random effects correlation between the originality and utility effects was only somewhat smaller.
+
+```{r 'fesupp', child = "./Tables-supplementary-materials/FEtableSupp.Rmd"}
+
+```
+
+```{r 'resupp', child = "./Tables-supplementary-materials/REtableSupp.Rmd"}
+
+```
+
+```{r 'corrsupp', child = "./Tables-supplementary-materials/CorrtableSupp.Rmd"}
+
+```
+
+# Estimation With Uncorrelated Stimuli Set
+
+```{r 'reduced stimuli', child = "./Analysis-supplementary-materials/StimuliWithoutCorr.Rmd"}
+
+```
+
+In the original analysis, we found a substantial correlation between the originality and utility effects, suggesting that the more individuals take originality into account when they evaluate creativity, the less they take utility into account and vice versa. However, the originality and utility ratings were negatively correlated (*r* = `r mean(BayesFactor::correlationBF(items$orig.rating_s, items$util.rating_s, posterior = T, iterations = 1e5)[,"rho"])`). The correlation between the originality and utility effects may therefore be a function of the stimuli.   
+  To assess whether this is indeed the case, we re-estimated the model based on an uncorrelated set of stimuli and comparing results. We excluded all stimuli with an originality rating below 1.5 and a utility rating above -1 or a utility rating below 1.5. These criteria led us to exclude 20 stimuli, reducing the stimulus set from 64 to 44 stimuli and the stimulus correlation to *r* = `r mean(itemcorr.samples[,1])` `r apa_print(itemcorr)$full_result`.  
+  Across studies, the results were inconsistent. In Study 1, the posterior mean of the correlation between the stimulus originality and stimulus utility effects on the drift rate was `r summary(fit_wienerS1.reduced)$random$pers[7, 1]`, 95% CrI  [$`r summary(fit_wienerS1.reduced)$random$pers[7, 3]`$, `r summary(fit_wienerS1.reduced)$random$pers[7, 4]`] whereas in Study 2 it was `r summary(fit_wienerS2.reduced)$random$pers[7, 1]`, 95% CrI  [$`r summary(fit_wienerS2.reduced)$random$pers[7, 3]`$, `r summary(fit_wienerS2.reduced)$random$pers[7, 4]`]. This suggests that the correlation between the originality and utility effects on the drift rate was more robust in Study 1 than in Study 2.
+
+# Probit Model Analysis
+
+```{r 'probit', child = "./Analysis-supplementary-materials/ProbitmodelS1S2.Rmd"}
+
+```
+
+To examine whether we could redproduce the main findings using a different, less complex method than the DDM, we conducted a Bayesian hierarchical probit model analysis. We regressed the propensity to respond with 'creative' onto stimulus originality and stimulus utility and used a non-informative prior for the intercept and the two effects as well as for the variability parameters, $\mbox{Normal}(0, 0.3)$. For the correlation across random effects, we used an LKJ prior with shape parameter 3. As can be seen in Figure \@ref(fig:plotIndEstimates), the extent and nature of individual differences in the originality and utility effects on the propensity to respond with 'Yes, creative' is very similar to the DDM results. The posterior mean of the correlation across random effects was similar too: it was `r summary(fit_probit1)$random$pers[6,1]`, 95% CrI [`r summary(fit_probit1)$random$pers[6,3]`, `r summary(fit_probit1)$random$pers[6,4]`] in Study 1 and `r summary(fit_probit2)$random$pers[6,1]`, 95% CrI [`r summary(fit_probit2)$random$pers[6,3]`, `r summary(fit_probit2)$random$pers[6,4]`] in Study 2. These results suggest that the results in the DDM are mainly driven by the task decisions and less driven by response times.  
+
+
+```{r 'probit table', child = "./Tables-supplementary-materials/ProbittableS1S2.Rmd"}
+
+```
+
+
+```{r 'probit individual estimates', child = "./Figures-supplementary-materials/plotProbitindest.Rmd"}
+
+```
+
+
+# References
+
+\begingroup
+\setlength{\parindent}{-0.5in}
+\setlength{\leftskip}{0.5in}
+
+<div id = "refs"></div>
+\endgroup
+

@@ -1,0 +1,60 @@
+---
+title: "Creative or not, Plot fit assessment median"
+output:
+  pdf_document: papaja::apa6_pdf
+  html_document: default
+  word_document: papaja::apa6_word
+---
+```{r 'FAplot1', dev = "pdf", dpi = 300, fig.pos = "H", fig.width = 4.2, fig.cap = "Posterior predictive check of Study 1. The inner vertical lines show the 80$\\%$ CrIs and the outer vertical lines the 95$\\%$ CrIs. The red cross denotes the observed and the black circle the predicted statistics. The model could reproduce the three summary statistics quite accurately.", fig.align = 'center'}
+
+p1 <- ggplot(d_data_agg2, aes(x = 1)) +
+  geom_linerange(aes(ymin =  prob.upper_lll, ymax =  prob.upper_hhh), 
+                 col = "darkgrey", size = 1.5) + 
+  geom_linerange(aes(ymin =  prob.upper_ll, ymax =  prob.upper_hh), 
+                 size = 3, col = "grey") + 
+  geom_point(aes(y = prob.upper_median), shape = 1, size = 2) +
+  geom_point(aes(y = prob.upper), shape = 4, col = "red", size = 2) +
+  ggtitle("Response Probabilities") + 
+  ylab("P of responding 'creative'") + xlab("") +
+  theme(axis.text.y = element_text(size = 8),
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.line.x = element_blank(),
+         plot.title = element_text(size = 10),
+         axis.title.y = element_text(size = 10))
+p2 <- ggplot(d_data_agg2, aes(x = 1)) +
+  geom_linerange(aes(ymin =  medrt.upper_lll, ymax =  medrt.upper_hhh), 
+                 col = "darkgrey", size =  1.5) + 
+  geom_linerange(aes(ymin =  medrt.upper_ll, ymax =  medrt.upper_hh), 
+                 size = 3, col = "grey") + 
+  geom_point(aes(y = medrt.upper_median), shape = 1, size = 2) +
+  geom_point(aes(y = medrt.upper), shape = 4, col = "red", size = 2) +
+  ggtitle("Median RTs 'creative'") + 
+  ylab("RT (s)") + xlab("") +
+  theme(axis.text.y = element_text(size = 8),
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.line.x = element_blank(),
+         plot.title = element_text(size = 10),
+         axis.title.y = element_text(size = 10))
+p3 <- ggplot(d_data_agg2, aes(x = 1)) +
+  geom_linerange(aes(ymin =  medrt.lower_lll, ymax =  medrt.lower_hhh), 
+                 col = "darkgrey", size = 1.5) + 
+  geom_linerange(aes(ymin =  medrt.lower_ll, ymax =  medrt.lower_hh), 
+                 size = 3, col = "grey") + 
+  geom_point(aes(y = medrt.lower_median), shape = 1, size = 2) +
+  geom_point(aes(y = medrt.lower), shape = 4, col = "red", size = 2) +
+  ggtitle("Median RTs 'not creative'") + 
+  ylab("RT (s)") + xlab("") +
+  theme(axis.text.y = element_text(size = 8),
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.line.x = element_blank(),
+        plot.title = element_text(size = 10),
+        axis.title.y = element_text(size = 10))
+grid.arrange(p1, p2, p3, ncol = 2)
+```
+

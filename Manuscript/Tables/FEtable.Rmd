@@ -1,0 +1,49 @@
+---
+title: "Creative or not?, Table FE"
+output:
+  pdf_document: papaja::apa6_pdf
+  html_document: default
+  word_document: papaja::apa6_word
+---
+```{r 'resFEtable', results = "asis", fig.pos = 'h'}
+# S1
+summary1 <- summary(wienermodel1)
+FEsummary_wienermodel1 <- rbind(data.frame(summary1$fixed), data.frame(summary1$spec_pars) )
+rownames(FEsummary_wienermodel1) <- c("$\\mu_{\\delta}$", "$\\mu_{\\alpha}$"
+                            , "$\\mu_{\\beta}$", "$\\mu_{\\theta_{OR}}$"
+                            , "$\\mu_{\\theta_{UT}}$"
+                            , "$\\tau$")
+colnames(FEsummary_wienermodel1) <- c("Mean","SD", "LB", "UB", "Rhat","Bulk_ESS", "Tail_ESS")
+
+FEsummary_wienermodel1 %<>%
+    select(-Bulk_ESS,-Tail_ESS, -Rhat) %>% # removing Bulk ESS and Tail ESS
+    rownames_to_column(var = " ")
+
+# S2
+summary2 <- summary(wienermodel2)
+FEsummary_wienermodel2 <- rbind(data.frame(summary2$fixed), data.frame(summary2$spec_pars) )
+rownames(FEsummary_wienermodel2) <- c("$\\mu_{\\delta}$", "$\\mu_{\\alpha}$"
+                            , "$\\mu_{\\beta}$", "$\\mu_{\\theta_{OR}}$"
+                            , "$\\mu_{\\theta_{UT}}$"
+                            , "$\\tau$")
+colnames(FEsummary_wienermodel2) <- c("Mean","SD", "LB", "UB", "Rhat","Bulk_ESS", "Tail_ESS")
+
+FEsummary_wienermodel2 %<>%
+    select(-Bulk_ESS,-Tail_ESS, -Rhat) %>% # removing Bulk ESS and Tail ESS
+    rownames_to_column(var = " ")
+
+
+papaja::apa_table(
+    cbind(FEsummary_wienermodel1, FEsummary_wienermodel2[,-1]),
+    placement = "H",
+    align = c("l", "l","l","l","l","r","r","r","r"),
+    caption = "Posterior mean, standard deviation of the posterior distribution, 95\\% credible interval and $\\hat{R}$
+    statistic for the fixed effects (population-level) parameters",
+    note = "$\\mu_{\\theta_{OR}}$, $\\mu_{\\theta_{UT}}$, and $\\mu_{\\delta}$ are standardized estimates as the originality and utility ratings of the stimuli are z-scores. SD = standard deviation; LB = lower bound; UB = upper bound.",
+    small = TRUE,
+    digits = 2,
+    escape = FALSE,
+    col_spanners = list(`Study 1` = c(2,5), `Study 2` = c(6,9))
+    )
+```
+

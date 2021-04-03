@@ -1,0 +1,268 @@
+---
+title: "Creative or not, Stimulus set with less Correlation Study 1"
+output:
+  pdf_document: papaja::apa6_pdf
+  html_document: default
+  word_document: papaja::apa6_word
+---
+
+```{r setup 4, include=FALSE}
+knitr::opts_chunk$set(echo = F)
+```
+
+```{r, eval = T}
+# load data
+fulldat1 <- read.csv("../../Data/Study1/CON_S1.csv")
+
+##############
+# clean data #
+##############
+
+## same response in at least 90% of the trials
+excl1 <- fulldat1 %>%
+  group_by(pers) %>%
+  summarize(countCreative = sum(creative)/n(), 
+            countNotCreative = 1-(sum(creative)/n())) %>%
+  filter(countCreative >= 0.9 | countNotCreative >= 0.9)
+
+# exclude participants based on 90% criterion and remove first two responses
+dat1_excl1 <- fulldat1 %>% 
+  filter(!(pers %in% excl1$pers)) %>%
+# remove first two trials
+  group_by(pers) %>% 
+  slice(3:n()) %>% 
+  ungroup()
+
+# remove RT > 6s and < 0.3s
+dat1_excl2 <- dat1_excl1 %>% 
+  filter(rt <= 6000  &  rt > 300)
+
+# exclude participants with fewer than 47 trials
+excl3 <- dat1_excl2 %>% 
+  group_by(pers) %>% 
+  count() %>% 
+  filter(n < 47)
+
+dat1 <- dat1_excl2 %>%
+  filter(!(pers %in% excl3$pers)) %>% 
+  # turn rt into seconds
+  mutate(rt = rt/1000)
+
+
+items <- read.csv("../../Data/stimuli.csv")
+items_reduced <- subset(items, orig.rating_s < 1.5 & util.rating_s > -1 & util.rating_s< 1.5)
+nrow(items_reduced) # number of items
+```
+
+```{r, eval = T}
+psych::pairs.panels(items_reduced[,c(5,6)], main = "Item ratings")
+
+itemcorr <- correlationBF(items_reduced$orig.rating, items_reduced$util.rating)
+exp(itemcorr@bayesFactor$bf)[1] # BF
+itemcorr.samples <- posterior(itemcorr, iterations = 10000, index = 1)
+mean(itemcorr.samples[,1])
+```
+
+
+```{r}
+dat1Reduced <- subset(dat1, itemid %in% items_reduced$itemid)
+dat1Reduced$pers <- as.factor(dat1Reduced$pers)
+dat1Reduced$itemid <-  as.factor(dat1Reduced$itemid)
+dat1Reduced$creative <- as.numeric(dat1Reduced$creative)
+```
+
+
+```{r 'model spec S1 2', eval = T}
+formula <- bf(rt | dec(creative) ~ 1 + (1|itemid) + orig.rating_s + util.rating_s + (1 + orig.rating_s + util.rating_s|p|pers),
+              bs ~ 1 + (1|p|pers),
+              bias ~ 1)
+
+
+get_prior(formula,
+          data = dat1Reduced, 
+          family = wiener(link_bs = "identity",
+                          link_ndt = "identity",
+                          link_bias = "identity"))
+
+prior <- c(
+  prior("lkj(3)", class = "cor"),
+  prior("normal(0, 1)", class = "b"),
+  prior("normal(0, 0.3)", class = "sd"),
+  set_prior("normal(0, 1)", class = "Intercept"),
+  set_prior("beta(1.3, 1.3)", class = "Intercept", dpar = "bias"),
+  set_prior("normal(0, 2)", class = "Intercept", dpar = "bs"),
+  set_prior("normal(0, 0.3)", class = "sd", dpar =  "bs"),
+  set_prior("normal(0, 0.3)", class = "sd", group = "pers"),
+  set_prior("normal(0, 0.3)", class = "sd", group = "itemid"),
+  set_prior("uniform(0, 300)", class = "ndt"))
+
+
+make_stancode(formula, 
+              family = wiener(link_bs = "identity",
+                              link_ndt = "identity",
+                              link_bias = "identity"),
+              data = dat1Reduced, 
+              prior = prior)
+
+
+initfun <- function() {
+  list(
+    b = rnorm(2, mean = 0, sd = 0.5),
+    Intercept_bs = runif(tmp_dat$K_bs, 1, 2),
+    ndt = 0.3,
+    Intercept_bias = 0.5,
+    L_2 = diag(tmp_dat$M_2),
+    z_2 = matrix(rnorm(tmp_dat$M_2*tmp_dat$N_2, 0, 0.01),
+                 tmp_dat$M_2, tmp_dat$N_2)
+  )
+}
+
+tmp_dat <- make_standata(formula, 
+                         family = wiener(link_bs = "identity",
+                                         link_ndt = "identity",
+                                         link_bias = "identity"),
+                         data = dat1Reduced, prior = prior)
+
+```
+
+```{r 'estimate model S1 2', eval = T}
+fit_wienerS1.reduced <- brm(formula, 
+                   data = dat1Reduced,
+                   family = wiener(link_bs = "identity", 
+                                   link_ndt = "identity",
+                                   link_bias = "identity"),
+                   prior = prior, inits = initfun,
+                   iter = 3000, warmup = 1000, chains = 2, cores = 2, sample_prior = T,
+                   control = list(max_treedepth = 14, adapt_delta = .95))
+
+save(fit_wienerS1.reduced, file = "fit_wienerS1.reduced.Rda", compress = "xz")
+```
+
+
+## Study 2
+
+```{r, eval = T}
+# load data
+fulldat2 <- read.csv("../../Data/Study2/CON_S2.csv")
+
+##############
+# clean data #
+##############
+
+## same response in at least 90% of the trials
+excl1 <- fulldat2 %>%
+  group_by(pers) %>%
+  summarize(countCreative = sum(creative)/n(), 
+            countNotCreative = 1-(sum(creative)/n())) %>%
+  filter(countCreative >= 0.9 | countNotCreative >= 0.9)
+
+# exclude participants based on 90% criterion and remove first two responses
+dat2_excl1 <- fulldat2 %>% 
+  filter(!(pers %in% excl1$pers)) %>%
+# remove first two trials
+  group_by(pers) %>% 
+  slice(3:n()) %>% 
+  ungroup()
+
+# remove RT > 6s and < 0.3s
+dat2_excl2 <- dat2_excl1 %>% 
+  filter(rt <= 6000  &  rt > 300)
+
+# exclude participants with fewer than 47 trials
+excl3 <- dat2_excl2 %>% 
+  group_by(pers) %>% 
+  count() %>% 
+  filter(n < 47)
+
+dat2 <- dat2_excl2 %>%
+  filter(!(pers %in% excl3$pers)) %>% 
+  # turn rt into seconds
+  mutate(rt = rt/1000)
+
+
+items <- read.csv("../../Data/Stimuli.csv")
+items_reduced <- subset(items, orig.rating_s < 1.5 & util.rating_s > -1 & util.rating_s< 1.5)
+nrow(items_reduced) # number of items
+```
+
+
+```{r, eval = T}
+psych::pairs.panels(items_reduced[,c(5,6)], main = "Item ratings")
+```
+
+
+```{r}
+dat2Reduced <- subset(dat2, itemid %in% items_reduced$itemid)
+dat2Reduced$pers <- as.factor(dat2Reduced$pers)
+dat2Reduced$itemid <-  as.factor(dat2Reduced$itemid)
+dat2Reduced$creative <- as.numeric(dat2Reduced$creative)
+```
+
+
+```{r 'model spec S1', eval = T}
+formula <- bf(rt | dec(creative) ~ 1 + (1|itemid) + orig.rating_s + util.rating_s + (1 + orig.rating_s + util.rating_s|p|pers),
+              bs ~ 1 + (1|p|pers),
+              bias ~ 1)
+
+
+get_prior(formula,
+          data = dat2Reduced, 
+          family = wiener(link_bs = "identity",
+                          link_ndt = "identity",
+                          link_bias = "identity"))
+
+prior <- c(
+  prior("lkj(3)", class = "cor"),
+  prior("normal(0, 0.2)", class = "b"),
+  prior("normal(0, 0.3)", class = "sd"),
+  set_prior("normal(0, 1)", class = "Intercept"),
+  set_prior("beta(1.3, 1.3)", class = "Intercept", dpar = "bias"),
+  set_prior("normal(0, 2)", class = "Intercept", dpar = "bs"),
+  set_prior("normal(0, 0.3)", class = "sd", dpar =  "bs"),
+  set_prior("normal(0, 0.3)", class = "sd", group = "pers"),
+  set_prior("normal(0, 0.3)", class = "sd", group = "itemid"),
+  set_prior("uniform(0, 300)", class = "ndt"))
+
+
+make_stancode(formula, 
+              family = wiener(link_bs = "identity",
+                              link_ndt = "identity",
+                              link_bias = "identity"),
+              data = dat2Reduced, 
+              prior = prior)
+
+
+initfun <- function() {
+  list(
+    b = rnorm(2, mean = 0, sd = 0.5),
+    Intercept_bs = runif(tmp_dat$K_bs, 1, 2),
+    ndt = 0.3,
+    Intercept_bias = 0.5,
+    L_2 = diag(tmp_dat$M_2),
+    z_2 = matrix(rnorm(tmp_dat$M_2*tmp_dat$N_2, 0, 0.01),
+                 tmp_dat$M_2, tmp_dat$N_2)
+  )
+}
+
+tmp_dat <- make_standata(formula, 
+                         family = wiener(link_bs = "identity",
+                                         link_ndt = "identity",
+                                         link_bias = "identity"),
+                         data = dat2Reduced, prior = prior)
+
+```
+
+```{r 'estimate model S2', eval = T}
+fit_wienerS2.reduced <- brm(formula, 
+                   data = dat2Reduced,
+                   family = wiener(link_bs = "identity", 
+                                   link_ndt = "identity",
+                                   link_bias = "identity"),
+                   prior = prior, inits = initfun,
+                   iter = 4500, warmup = 1600, chains = 4, cores = 4, sample_prior = T,
+                   control = list(max_treedepth = 15, adapt_delta = .95))
+
+#save(fit_wienerS2.reduced, file = "fit_wienerS2.reduced2.Rda", compress = "xz")
+```
+
+

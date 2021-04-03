@@ -1,0 +1,55 @@
+---
+title: "Creative or not?, Table RE"
+output:
+  pdf_document: papaja::apa6_pdf
+  html_document: default
+  word_document: papaja::apa6_word
+---
+```{r 'resREtable', results = "asis", fig.pos = 'h'}
+REsummary_pers1 <- data.frame(summary(wienermodel1)$random$pers)[1:4,]
+REsummary_table <- rbind(data.frame(summary(wienermodel1)$random$itemid), REsummary_pers1) %>% 
+  mutate_if(is.numeric, function(x) round(x, digits = 2))
+  
+REsummary_wienermodel1 <- rbind(REsummary_table, rep("-", 4))
+
+rownames(REsummary_wienermodel1) <- c("$\\sigma_{\\delta_{\\phi}}$"
+                                     , "$\\sigma_{\\delta_{\\upsilon}}$"
+                                      , "$\\sigma_{OR}$"
+                            , "$\\sigma_{UT}$"
+                            , "$\\sigma_{\\alpha}$"
+                            , "$\\sigma_{\\beta}$")
+colnames(REsummary_wienermodel1) <- c("Mean","SD", "LB", "UB", "Rhat", "Bulk_ESS", "Tail_ESS")
+
+REsummary_wienermodel1 %<>%
+     select(-Bulk_ESS,-Tail_ESS, -Rhat) %>% # removing Bulk ESS and Tail ESS
+    rownames_to_column(var = " ") 
+
+REsummary_pers2 <- data.frame(summary(wienermodel2)$random$pers)[1:5,]
+REsummary_wienermodel2 <- rbind(data.frame(summary(wienermodel2)$random$itemid), REsummary_pers2)
+
+rownames(REsummary_wienermodel2) <- c("$\\sigma_{\\delta_{\\phi}}$"
+                                     , "$\\sigma_{\\delta_{\\upsilon}}$"
+                                      , "$\\sigma_{\\theta_{OR}}$"
+                            , "$\\sigma_{\\theta_{UT}}$"
+                            , "$\\sigma_{\\alpha}$"
+                            , "$\\sigma_{\\beta}$")
+colnames(REsummary_wienermodel2) <- c("Mean","SD", "LB", "UB", "Rhat", "Bulk_ESS", "Tail_ESS")
+
+REsummary_wienermodel2 %<>%
+     select(-Bulk_ESS,-Tail_ESS, -Rhat) %>% # removing Bulk ESS and Tail ESS
+    rownames_to_column(var = " ")
+
+apa_table(
+    cbind(REsummary_wienermodel1, REsummary_wienermodel2[,-1]),
+    placement = "H",
+    align = c("l", "l","l","l","l","r","r","r","r"),
+    caption = "Posterior mean, standard deviation of the posterior distribution, 95\\% credible interval and $\\hat{R}$
+    statistic for the variability parameters. $\\sigma_{\\delta_{\\phi}}$ denotes the variability across stimuli",
+    note = "SD = standard deviation; LB = lower bound; UB = upper bound.",
+    small = TRUE,
+    digits = 2,
+    escape = FALSE,
+    col_spanners = list(`Study 1` = c(2,5), `Study 2` = c(6,9))
+    )
+```
+

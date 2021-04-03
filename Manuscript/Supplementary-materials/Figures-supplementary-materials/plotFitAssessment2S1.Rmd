@@ -1,0 +1,50 @@
+---
+title: "Creative or not, QQ-plot fit assessment Study 1"
+output:
+  pdf_document: papaja::apa6_pdf
+  html_document: default
+  word_document: papaja::apa6_word
+---
+```{r 'FAplot2',  dev = "pdf", dpi = 300, fig.pos = "H", fig.cap = "Posterior predictive check of Study 1. Each dot represents a participant. The model fit was slightly better for the upper responses compared to the lower responses. The fit was best for the medians and worst for the 10th quantiles. At the 10th and 25th quantiles, the predicted RTs were smaller than the observed ones. At the 75th quantiles the model predicted slightly slower RTs than were observed, which could indicate some bias in the model. Apart from that, the model fits well.", fig.align = 'center'}
+plottext <- rt_pp %>% 
+  group_by(rowname, boundary) %>% 
+  summarise(ccc = format(
+    CCC(observed, predicted, na.rm = TRUE)$rho.c$est, 
+    digits = 2))
+
+p_creative <- rt_pp %>% 
+  filter(boundary == "upper") %>% 
+  ggplot(aes(x = observed, predicted)) +
+  geom_abline(slope = 1, intercept = 0) +
+  geom_point() +
+  geom_text(data=plottext[ plottext$boundary == "upper", ],
+            aes(x = 1, y =5, label=ccc), 
+            parse = TRUE, inherit.aes=FALSE) +
+  coord_fixed() +
+  facet_grid(~ rowname) +
+  ggtitle("'Creative' responses") +
+  theme_bw() +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank())
+
+p_notcreative <- rt_pp %>% 
+  filter(boundary == "lower") %>% 
+  ggplot(aes(x = observed, predicted)) +
+  geom_abline(slope = 1, intercept = 0) +
+  geom_point() +
+  geom_text(data=plottext[ plottext$boundary == "lower", ],
+            aes(x = 1, y = 5, label=ccc), 
+            parse = TRUE, inherit.aes=FALSE) +
+  coord_fixed() +
+  facet_grid(~ rowname) +
+  ggtitle("'Not creative' responses") +
+  theme_bw()  +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank())
+
+grid.arrange(p_creative, p_notcreative, ncol = 1)
+```
+
+
