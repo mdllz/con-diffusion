@@ -1,4 +1,4 @@
-This repository contains the analysis, tables, text, and figures for the manuscript "Creative or Not? Hierarchical Diffusion Modeling of the Creative Evaluation Process" submitted by Michelle Donzallaz, Julia Haaf, and Claire Stevenson. 
+This repository contains the data, analysis, tables, text, and figures for the manuscript "Creative or Not? Hierarchical Diffusion Modeling of the Creative Evaluation Process" submitted by Michelle Donzallaz, Julia Haaf, and Claire Stevenson. 
 
 The manuscript is written using R Markdown. We used the following R version and packages.  
 
