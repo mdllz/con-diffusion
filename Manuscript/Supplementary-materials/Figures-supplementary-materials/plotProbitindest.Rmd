@@ -17,7 +17,7 @@ plot.orig1 <- coef(fit_probit1, probs = c(0.025, 0.975))$pers[,,2] %>%
   mutate(sig = as.factor(ifelse(Q2.5 < 0 & Q97.5 > 0, 0, 1)),
          index = as.factor(1:length(unique(dat1$pers)))) %>%
   ggplot() +
-  ggtitle("A.") +
+  ggtitle("A") +
   geom_errorbar(aes(x = index, 
                     ymin = Q2.5, 
                     ymax = Q97.5, 
@@ -55,7 +55,7 @@ plot.util1 <- coef(fit_probit1, probs = c(0.025, 0.975))$pers[,,3] %>%
   mutate(sig = as.factor(ifelse(Q2.5 < 0 & Q97.5 > 0, 0, 1)),
          index = as.factor(1:length(unique(dat1$pers)))) %>%
   ggplot() +
-  ggtitle("B.") +
+  ggtitle("B") +
   geom_errorbar(aes(x = index, 
                     ymin = Q2.5, 
                     ymax = Q97.5, 
@@ -93,7 +93,7 @@ plot.orig2 <- coef(fit_probit2, probs = c(0.025, 0.975))$pers[,,2] %>%
   mutate(sig = as.factor(ifelse(Q2.5 < 0 & Q97.5 > 0, 0, 1)),
          index = as.factor(1:length(unique(dat2$pers)))) %>%
   ggplot() +
-  ggtitle("C.") +
+  ggtitle("C") +
   geom_errorbar(aes(x = index, 
                     ymin = Q2.5, 
                     ymax = Q97.5, 
@@ -130,7 +130,7 @@ plot.util2 <- coef(fit_probit2, probs = c(0.025, 0.975))$pers[,,3] %>%
   mutate(sig = as.factor(ifelse(Q2.5 < 0 & Q97.5 > 0, 0, 1)),
          index = as.factor(1:length(unique(dat2$pers)))) %>%
   ggplot() +
-  ggtitle("D.") +
+  ggtitle("D") +
   geom_errorbar(aes(x = index, 
                     ymin = Q2.5, 
                     ymax = Q97.5, 

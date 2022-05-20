@@ -19,6 +19,7 @@ excl1_2 <- fulldat2 %>%
   group_by(pers) %>%
   summarize(countCreative = sum(creative)/n(), 
             countNotCreative = 1-(sum(creative)/n())) %>%
+  ungroup() %>% 
   filter(countCreative >= 0.9 | countNotCreative >= 0.9)
 
 # exclude participants based on 90% criterion and remove first two responses
@@ -31,16 +32,17 @@ dat2_excl1_2 <- fulldat2 %>%
 
 # remove RT > 6s and < 0.3s
 dat2_excl2 <- dat2_excl1_2 %>% 
-  filter(rt <= 6000  &  rt > 300)
+  filter(rt <= 6000  &  rt >= 300)
 
 # exclude participants with fewer than 47 trials
-excl3 <- dat2_excl2 %>% 
+excl3_2 <- dat2_excl2 %>% 
   group_by(pers) %>% 
   count() %>% 
+  ungroup() %>% 
   filter(n < 47)
 
 dat2 <- dat2_excl2 %>%
-  filter(!(pers %in% excl3$pers)) %>% 
+  filter(!(pers %in% excl3_2$pers)) %>% 
   # turn rt into seconds
   mutate(rt = rt/1000)
 
@@ -60,86 +62,84 @@ sd(dat2[dat2$creative == 0,]$rt)
 ```
 
 ```{r 'S2 correlation originality and utility and mean stimuli RT', include = F}
-# correlation originality and utility ratings
-stim <- dat2 %>% 
-            select(itemid, orig.rating_s, util.rating_s) %>% 
-            distinct()
+# median split including median
+median_split_s2_util_low_incl_median <- dat2 %>% 
+  mutate(util = ifelse(util.rating_s >= median(util.rating_s), 1, 0)) %>% 
+  filter(util == 0) %>% 
+  group_by(itemid) %>% 
+  summarize(rt = mean(rt),
+            util = unique(util),
+            orig = unique(orig.rating_s)) %>% 
+  ungroup()
 
-cor.orig.util <- correlationBF(stim$orig.rating_s, stim$util.rating_s, posterior = T, iterations = 10000)
-mean(cor.orig.util[,"rho"])
+median_split_s2_util_high_incl_median <- dat2 %>% 
+  mutate(util = ifelse(util.rating_s >= median(util.rating_s), 1, 0)) %>% 
+  filter(util == 1) %>% 
+  group_by(itemid) %>% 
+  summarize(rt = mean(rt),
+            util = unique(util),
+            orig = unique(orig.rating_s)) %>% 
+  ungroup()
 
-BF.cor.orig.util <- correlationBF(stim$orig.rating_s, stim$util.rating_s)
-exp(BF.cor.orig.util@bayesFactor$bf)
-
-
-# Correlation response times and originality
-stim <- dat2 %>%
-            group_by(itemid) %>%
-            summarize(rt.meansALL = mean(rt), prop.creative = mean(creative)) %>%
-            left_join(stim)
-
-cor.rtmeans.orig <- correlationBF(stim$orig.rating_s, stim$rt.meansALL, posterior = T, iterations = 10000)
-mean(cor.rtmeans.orig[,"rho"])
-
-BF.cor.rtmeans.orig <- correlationBF(stim$orig.rating_s, stim$rt.meansALL)
-exp(BF.cor.rtmeans.orig@bayesFactor$bf)
-
-
-# Correlation response times and utility
-
-cor.rtmeans.util <- correlationBF(stim$util.rating_s, stim$rt.meansALL, posterior = T, iterations = 10000)
-mean(cor.rtmeans.util[,"rho"])
-
-BF.cor.rtmeans.util <- correlationBF(stim$util.rating_s, stim$rt.meansALL)
-exp(BF.cor.rtmeans.util@bayesFactor$bf)
+# correlation low utility: rt and originality  
+bf_corr_median_split_s2_util_low_incl_median <- correlationBF(median_split_s2_util_low_incl_median$rt, median_split_s2_util_low_incl_median$orig)
+1/exp(bf_corr_median_split_s2_util_low_incl_median@bayesFactor$bf)
+corr_median_split_s2_util_low_incl_median <-  posterior(bf_corr_median_split_s2_util_low_incl_median, iterations = 10000)
+mean(corr_median_split_s2_util_low_incl_median[,1])
 
 
-# Correlation response times "creative" and originality
+# correlation high utility: rt and originality  
+bf_corr_median_split_s2_util_high_incl_median <- correlationBF(median_split_s2_util_high_incl_median$rt, median_split_s2_util_high_incl_median$orig)
+exp(bf_corr_median_split_s2_util_high_incl_median@bayesFactor$bf)
+corr_median_split_s2_util_high_incl_median <-  posterior(bf_corr_median_split_s2_util_high_incl_median, iterations = 10000)
+mean(corr_median_split_s2_util_high_incl_median[,1])
 
-stim <- dat2 %>%
-              filter(creative == 1) %>%
-              group_by(itemid) %>%
-              summarize(rt.meansC = mean(rt)) %>%
-              left_join(stim)
+# ------------------------------------------------------------
 
+# median split excluding median
+median_split_s2_util_low_excl_median <- dat2 %>% 
+  mutate(util = ifelse(util.rating_s > median(util.rating_s), 1, 0)) %>% 
+  filter(util == 0) %>% 
+  group_by(itemid) %>% 
+  summarize(rt = mean(rt),
+            util = unique(util),
+            orig = unique(orig.rating_s)) %>% 
+  ungroup()
 
-cor.rtmeans.orig.crea <- correlationBF(stim$orig.rating_s, stim$rt.meansC,  posterior = T, iterations = 10000)
-mean(cor.rtmeans.orig.crea[,"rho"])
+median_split_s2_util_high_excl_median <- dat2 %>% 
+  mutate(util = ifelse(util.rating_s > median(util.rating_s), 1, 0)) %>% 
+  filter(util == 1) %>% 
+  group_by(itemid) %>% 
+  summarize(rt = mean(rt),
+            util = unique(util),
+            orig = unique(orig.rating_s)) %>% 
+  ungroup()
 
-BF.cor.rtmeans.orig.crea <- correlationBF(stim$orig.rating_s, stim$rt.meansC)
-exp(BF.cor.rtmeans.orig.crea@bayesFactor$bf)
-  
-# Correlation response time means "creative" and utility
-
-cor.rtmeans.util.crea <- correlationBF(stim$util.rating_s, stim$rt.meansC, posterior = T, iterations = 10000)
-mean(cor.rtmeans.util.crea[,"rho"])
-
-BF.cor.rtmeans.util.crea <- correlationBF(stim$util.rating_s, stim$rt.meansC)
-exp(BF.cor.rtmeans.util.crea@bayesFactor$bf)
-
-# Correlation response times "not creative" and originality
-
-stim <- dat2 %>%
-              filter(creative == 0) %>%
-              group_by(itemid) %>%
-              summarize(rt.meansNC = mean(rt)) %>%
-              left_join(stim)
-
-
-cor.rtmeans.orig.notcrea <- correlationBF(stim$orig.rating_s, stim$rt.meansNC, iterations = 10000, posterior = T)
-mean(cor.rtmeans.orig.notcrea[,"rho"])
-
-BF.cor.rtmeans.orig.notcrea <- correlationBF(stim$orig.rating_s, stim$rt.meansNC)
-exp(BF.cor.rtmeans.orig.notcrea@bayesFactor$bf)
+# correlation low utility: rt and originality  
+bf_corr_median_split_s2_util_low_excl_median <- correlationBF(median_split_s2_util_low_excl_median$rt, median_split_s2_util_low_excl_median$orig)
+1/exp(bf_corr_median_split_s2_util_low_excl_median@bayesFactor$bf)
+corr_median_split_s2_util_low_excl_median <-  posterior(bf_corr_median_split_s2_util_low_excl_median, iterations = 10000)
+mean(corr_median_split_s2_util_low_excl_median[,1])
 
 
-# Correlation response times "not creative" and utility
+# correlation high utility: rt and originality  
+bf_corr_median_split_s2_util_high_excl_median <- correlationBF(median_split_s2_util_high_excl_median$rt, median_split_s2_util_high_excl_median$orig)
+exp(bf_corr_median_split_s2_util_high_excl_median@bayesFactor$bf)
+corr_median_split_s2_util_high_excl_median <-  posterior(bf_corr_median_split_s2_util_high_excl_median, iterations = 10000)
+mean(corr_median_split_s2_util_high_excl_median[,1])
 
-cor.rtmeans.util.notcrea <- correlationBF(stim$util.rating_s, stim$rt.meansNC, posterior = T, iterations = 10000)
-mean(cor.rtmeans.util.notcrea[,"rho"])
+```
 
-BF.cor.rtmeans.util.notcrea <- correlationBF(stim$util.rating_s, stim$rt.meansNC)
-exp(BF.cor.rtmeans.util.notcrea@bayesFactor$bf)
+```{r 'paired t-test RT for creative and not creative response S2', include = F}
+t_test_S2 <- dat2 %>% 
+  group_by(pers, creative) %>% 
+  summarize(mean_rt = mean(rt)) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = creative, values_from = mean_rt) %>% 
+  rename("not_creative" = "0", "creative" = "1")
+
+bf_rt_response_s2 <- ttestBF(x = t_test_S2$creative, y = t_test_S2$not_creative, paired=TRUE)
+1/exp(bf_rt_response_s2@bayesFactor$bf)
 ```
 
 ```{r 'est settings S2'}
@@ -152,7 +152,7 @@ adapt_d2 <- .99
 ```
 
 
-```{r, cache = TRUE, eval = TRUE}
+```{r, cache = TRUE}
 # turn variables into factor and create numeric response variable for estimation
 dat2$pers <- as.factor(dat2$pers)
 dat2$itemid <- as.factor(dat2$itemid)
@@ -160,14 +160,15 @@ dat2$rt <- as.numeric(dat2$rt)
 dat2$creative <- as.numeric(dat2$creative)
 # model formula
 formula <- bf(rt | dec(creative) ~ 1 + (1|itemid) + orig.rating_s + util.rating_s + (1 + orig.rating_s + util.rating_s|p|pers),
-              bs ~ 1 + (1|p|pers),
+              bs ~ 0 + Intercept + (1|p|pers),
               bias ~ 1 + (1|p|pers))
 
-# get_prior(formula,
-#           data = dat2, 
-#           family = wiener(link_bs = "identity",
-#                           link_ndt = "identity",
-#                           link_bias = "identity"))
+
+  get_prior(formula,
+            data = dat2, 
+            family = wiener(link_bs = "identity",
+                            link_ndt = "identity",
+                            link_bias = "identity"))
 # set priors
 prior <- c(
   prior("lkj(3)", class = "cor"),
@@ -175,12 +176,11 @@ prior <- c(
   prior("normal(0, 0.3)", class = "sd"),
   set_prior("normal(0, 1)", class = "Intercept"),
   set_prior("beta(1, 1)", class = "Intercept", dpar = "bias"),
-  set_prior("normal(0, 2)", class = "Intercept", dpar = "bs"),
+  set_prior("normal(0, 2)", class = "b", dpar = "bs", lb = 0),
   set_prior("normal(0, 0.3)", class = "sd", dpar =  "bias"),
   set_prior("normal(0, 0.3)", class = "sd", dpar =  "bs"),
   set_prior("normal(0, 0.3)", class = "sd", group = "pers"),
-  set_prior("normal(0, 0.3)", class = "sd", group = "itemid"),
-  set_prior("uniform(0, 300)", class = "ndt"))
+  set_prior("normal(0, 0.3)", class = "sd", group = "itemid"))
 
 make_stancode(formula,
               family = wiener(link_bs = "identity",
@@ -363,7 +363,7 @@ for(r in 1:nrow(prior.i)) {
     above0.prior <- above0.prior + 1
   }
 }
-prior <- above0.prior/nrow(prior.i) # 23 percent evidential iterations
+prior <- above0.prior/nrow(prior.i) 
 BF.H5b <- 1/((1/(nrow(post.samples)+1))/prior) # evicence for unconstrained hypothesis
 
 # H6b
@@ -400,33 +400,55 @@ h7b.samples <- posterior(h7b, iterations = 10000, index = 1)
 mean(h7b.samples[,"rho"])
 ```
 
+
+```{r 'S2 compute ICC AUT'}
+dat_aut2_icc <- read.csv("../Data/Study2/AUT_icc_S2.csv")
+
+brick_icc_S2 <- compute_icc(dat_aut2_icc, "brick")
+paperclip_icc_S2 <- compute_icc(dat_aut2_icc, "paperclip")
+```
+
 ```{r, 'hypotheses CON task and AUT', include = F, results = 'hide'}
 dat_AUT2_r <- read.csv("../Data/Study2/AUT_S2.csv")
 
-# remove participants' data with less than 90 percent valid responses
-dat_AUT2 <- clean_aut_data(dat_AUT2_r) %>%
-  # remove 17 invalid responses: orig & util = 0
-    filter(!(originality == 0 & utility == 0))
 
-# average scores per object and count
-dat_AUT2 %>% 
-  group_by(object) %>% 
-  summarize(mean.orig = mean(originality),
-            mean.util = mean(utility),
-            count = n(),
-            count.pers = length(unique(respondent_id)),
-            count.per.pers = count/count.pers)
+# only keep AUT data from participants with DDM estimates
+dat_AUT2_c <- dat_AUT2_r %>% 
+  filter(pers %in% unique(dat2$pers))
+
+# clean data
+valid_or_not_2 <- dat_AUT2_c %>% 
+  # invalid responses: scored as 0 by either of the raters
+  mutate(valid = ifelse((originality_rater01 == 0 & utility_rater01 == 0) | (originality_rater02 == 0 & utility_rater02 == 0), 0, 1)) %>% 
+  group_by(pers) %>% 
+  summarize(prop_valid = sum(valid)/n()) %>% 
+  ungroup() %>% 
+  arrange(prop_valid)
+
+# save ids of participants with at least 90% valid responses
+id_valid_2 <- valid_or_not_2 %>% 
+  filter(prop_valid >= .9) %>% 
+  pull(pers)
+
+dat_AUT2 <- dat_AUT2_c %>% 
+  # only keep 'valid' participants
+  filter(pers %in% id_valid_2) %>% 
+  # compute mean orig & util scores across raters
+  mutate(originality = (originality_rater01 + originality_rater02)/2,
+         utility = (utility_rater01 + utility_rater02)/2) %>% 
+  # exclude responses where both raters gave a 0
+  filter(!(originality == 0 & utility == 0)) %>% 
+  group_by(pers) %>% 
+  summarize(origScore = mean(originality),
+            utilScore = mean(utility)) %>% 
+  ungroup()
 ```
 
 
 ```{r}
 # compute average scores and combine with eff
-eff2_aut <- dat_AUT2 %>%
-  group_by(respondent_id) %>%
-  summarize(origScore = mean(originality),
-            utilScore = mean(utility)) %>% 
-  rename("pers" = respondent_id) %>% 
-  right_join(eff2) %>% 
+eff2_aut <- left_join(eff2, dat_AUT2) %>% 
+  # remove NAs (DDM estimate but no AUT score)
   drop_na()
 ```
 
@@ -438,7 +460,7 @@ h8a.samples <- posterior(h8a, iterations = 10000, index = 1)
 mean(h8a.samples[,"rho"])
 
 h8b <- correlationBF(eff2_aut$origScore, eff2_aut$Estimate.util.rating_s, nullInterval = c(-1,0))
-exp(h8b@bayesFactor$bf)[1] # BF
+1/exp(h8b@bayesFactor$bf)[1] # BF
 h8b.samples <- posterior(h8b, iterations = 10000, index = 1)
 mean(h8b.samples[,"rho"])
 

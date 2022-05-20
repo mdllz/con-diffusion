@@ -1,0 +1,38 @@
+---
+title: "Creative or not, fit assessment RT density"
+output:
+  pdf_document: papaja::apa6_pdf
+  html_document: default
+  word_document: papaja::apa6_word
+---
+```{r 'FAplot4',  dev = "pdf", dpi = 300, fig.width = 4.5, fig.height = 6, fig.pos = "H", fig.cap = "Observed and predicted response time distributions in Study 1 (A) and 2 (B). The upper limit of the y-axis is determined by 1/2 of the maximum RT in the posterior predictive distribution samples.", fig.align = 'center'}
+
+par(mfrow = c(2,1))
+
+# Study 1
+rt1_mat <- d_data %>% 
+  select(contains("V"), -creative) %>%
+  mutate(across(everything(.), ~ abs(.))) %>% 
+  as.matrix()
+
+plot(density(dat1$rt), xlim = c(0,max(rt1_mat)/2), bty = "n", lwd = 3, col = "darkblue",
+     main = "A", xlab = "RT (s)")
+lines(density(rt1_mat), lwd = 3, col = "darkgrey")
+legend(x = max(rt1_mat)/4, y = max(density(dat1$rt)$y)/2, legend = c("observed", "predicted"), 
+       lty = 1, col = c("darkblue", "darkgrey"), lwd = 3, bty = "n")
+
+
+# Study 2
+rt2_mat <- d_data_s2 %>% 
+  select(contains("V"), -creative) %>%
+  mutate(across(everything(.), ~ abs(.))) %>% 
+  as.matrix()
+
+plot(density(dat2$rt), xlim = c(0,max(rt2_mat)/2), bty = "n", lwd = 3, col = "darkblue",
+     main = "B", xlab = "RT (s)")
+lines(density(rt2_mat), lwd = 3, col = "darkgrey")
+legend(x = max(rt2_mat)/4, y = max(density(dat2$rt)$y)/2, legend = c("observed", "predicted"), 
+       lty = 1, col = c("darkblue", "darkgrey"), lwd = 3, bty = "n")
+```
+
+

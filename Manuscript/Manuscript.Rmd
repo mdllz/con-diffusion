@@ -5,24 +5,24 @@ shorttitle        : "Creative or Not?"
 author: 
   - name          : "Michelle C. Donzallaz"
     affiliation   : "1"
+    address       : "Nieuwe Achtergracht 129-B, 1018 WS Amsterdam"
+    corresponding : yes   # Define only one corresponding author
+    email         : "m.c.donzallaz@uva.nl"  
   - name          : "Julia M. Haaf"
     affiliation   : "1"
   - name          : "Claire E. Stevenson"
     affiliation   : "1"
-    address       : "Nieuwe Achtergracht 129-B, 1018 WS Amsterdam"
-    corresponding : yes   # Define only one corresponding author
-    email         : "c.e.stevenson@uva.nl"  
 affiliation:
   - id            : "1"
     institution   : "University of Amsterdam"
   
 authornote: |
-  This report was written in R-Markdown with code for data analysis integrated into the text. The source code and the data can be found at: https://osf.io/73c2d/. The research reported in this manuscript has been presented at the virtual MathPsych/ICCM conference in 2020.
+  This report was written in R-Markdown with code for data analysis integrated into the text. The source code and the data can be found at: https://osf.io/73c2d/. This research was presented at the virtual MathPsych/ICCM conference in 2020 and was funded by the Amsterdam Brain & Cognition (ABC) Talent Grant (University of Amsterdam) 2016-2018 awarded to CES and the Jacobs Foundation Fellowship 2019-2022 awarded to CES (2018 1288 12). MCD was supported by a Vidi grant (VI.Vidi.191.091 to D. Matzke) from the Netherlands Organization of Scientific Research (NWO). JMH was supported by a Veni grant from the NWO (VI.Veni.201G.019). We thank Henrik Singmann and Han van der Maas for their valuable feedback on earlier versions of this manuscript. 
    
-note: "Draft version 1, April 2021. This paper has not been peer reviewed. Please do not copy or cite without authors' permission."   
+note: "Draft version 2, May 2022. This paper has not been peer reviewed. Please do not copy or cite without authors' permission."   
 
 abstract: |
-  When producing creative ideas (i.e., ideas that are original and useful) two main processes occur: ideation, where people brainstorm ideas, and evaluation, where they decide if the ideas are creative or not. While much is known about the ideation phase, the cognitive processes involved in creativity evaluation are largely unclear. In this paper, we present a novel modeling approach for the evaluation phase of creativity. We apply the drift diffusion model (DDM) to the creative-or-not (CON)-task to study the cognitive basis of evaluation and to examine individual differences in the extent to which people take originality and utility into account when evaluating creative ideas. The CON-task is a timed decision-making task where participants indicate whether they find uses for certain objects creative or not (e.g., using a book as a buoy). The different use items vary on the two creativity dimensions ‘originality’ and ‘utility’. In two studies (*n* = 293, 17806 trials; *n* = 152, 9291 trials), we found that stimulus originality was strongly related to participants’ drift rate, whereas stimulus utility was only somewhat associated with the drift rate. However, participants differed substantially in the effects of originality and utility. Furthermore, the implicit weights assigned to originality and utility on the CON-task were aligned with self-reported importance ratings of originality and utility and associated with divergent thinking performance. Our findings underline the importance of communicating rating criteria in divergent thinking tasks such as the alternative uses task to ensure a fair assessment of creative ability. 
+  When producing creative ideas (i.e., ideas that are original and useful) two main processes occur: ideation, where people brainstorm ideas, and evaluation, where they decide if the ideas are creative or not. While much is known about the ideation phase, the cognitive processes involved in creativity evaluation are less clear. In this paper, we present a novel modeling approach for the evaluation phase of creativity. We apply the drift diffusion model (DDM) to the creative-or-not (CON)-task to study the cognitive basis of evaluation and to examine individual differences in the extent to which people take originality and utility into account when evaluating creative ideas. The CON-task is a timed decision-making task where participants indicate whether they find uses for certain objects creative or not (e.g., using a book as a buoy). The different uses vary on the two creativity dimensions ‘originality’ and ‘utility’. In two studies (*n* = 293, 17806 trials; *n* = 152, 9291 trials), we found that stimulus originality was strongly related to participants’ drift rates but found only weak evidence for an association between stimulus utility and the drift rate. However, participants differed substantially in the effects of originality and utility. Furthermore, the implicit weights assigned to originality and utility on the CON-task were aligned with self-reported importance ratings of originality and utility and associated with divergent thinking performance in the alternative uses task (AUT). This research provides a cognitive modeling approach to creativity evaluation and underlines the importance of communicating rating criteria in divergent thinking tasks to ensure a fair assessment of creative ability. 
   
   <!-- https://tinyurl.com/ybremelq -->
   
@@ -69,6 +69,7 @@ library("psych")
 library("BayesFactor")
 library("stringr")
 library("corrplot")
+library("irr")
 
 #r_refs(file = "r-references.bib")
 my_citation <- cite_r(file = "r-references.bib")

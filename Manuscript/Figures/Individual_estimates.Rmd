@@ -5,7 +5,7 @@ output:
   html_document: default
   word_document: papaja::apa6_word
 ---
-```{r 'plotIndEstimates', dev = "pdf", dpi = 300, fig.pos = "H", fig.height = 5, fig.width = 6, fig.cap= "The plots show the posterior means and the 95 \\% credible interval (CrI) for each participant in increasing order. The dashed horizontal line denotes the population-level posterior means $\\mu_{OR}$, $\\mu_{UT}$. CrIs colored in red included zero. Plot A and C show the individual estimates of the originality effect in Study 1 and Study 2, respectively. Only a few lower bounds of the CrIs were below zero. Plot B and D show the individual estimates of the utility effect in Study 1 and Study 2, respectively. Some CrIs are above zero, some around zero, and a few below zero.", fig.align = 'center'}
+```{r 'plotIndEstimates', dev = "pdf", dpi = 300, fig.pos = "H", fig.height = 5, fig.width = 6, fig.cap= "The plots show the posterior means and the 95 \\% credible interval (CrI) for each participant in increasing order. The dashed horizontal line denotes the population-level posterior means $\\mu_{\\theta_{OR}}$, $\\mu_{\\theta_{UT}}$. CrIs colored in red included zero. Plot A and C show the individual estimates of the originality effect in Study 1 and Study 2, respectively. Only a few lower bounds of the CrIs were below zero. Plot B and D show the individual estimates of the utility effect in Study 1 and Study 2, respectively. Some CrIs are above zero, some around zero, and a few below zero.", fig.align = 'center'}
 
 
 # Code adapted from: Williams, D. R., Mulder, J., Rouder, J. N., & Rast, P. (2020). Beneath the surface: Unearthing within-person variability and mean relations # with Bayesian mixed models. Psychological Methods.
@@ -17,7 +17,47 @@ plot.orig1 <- coef(wienermodel1, probs = c(0.025, 0.975))$pers[,,2] %>%
   mutate(sig = as.factor(ifelse(Q2.5 < 0 & Q97.5 > 0, 0, 1)),
          index = as.factor(1:length(unique(dat1$pers)))) %>%
   ggplot() +
-  ggtitle("A.") +
+  ggtitle("A") +
+  geom_errorbar(aes(x = index, 
+                    ymin = Q2.5, 
+                    ymax = Q97.5, 
+                    color = sig), 
+                show.legend = F,
+                width = 0) +
+  geom_hline(yintercept = 0,
+             alpha = 0.50, color = "red") +
+  geom_hline(yintercept = posterior_summary(wienermodel1, pars = "b_")[3,1],
+             alpha = 0.50,
+             linetype = "twodash") +
+  geom_point(aes(x = index, 
+                 y = Estimate,
+                 group = sig),
+             size = 0.3, 
+             alpha = 0.75) +
+  labs(y = expression(theta[OR(i)]), x = "") +
+  # plot options
+  theme(plot.title = element_text(face = "bold", hjust = 0.5),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_blank(),
+        axis.line.x = element_blank(),
+        axis.text.y = element_text(size = 12),
+        axis.title.y = element_text(size = 14, margin = margin(r = 0)),
+        strip.text = element_text(size = 9),
+        axis.ticks.x=element_blank()) +
+        scale_y_continuous(limits = c(-.7, 1.2), breaks = seq(from = -.7, to =1.2, by = 0.2)) 
+# +
+#   draw_label("S1", -35, 1.38) + coord_cartesian(xlim = c(0, length(unique(dat1$pers))), ylim = c(-.7, 1.2), clip = "off")
+
+
+# plot utility effects S1
+plot.util1 <- coef(wienermodel1, probs = c(0.025, 0.975))$pers[,,3] %>%
+  data.frame() %>%
+  arrange(Estimate) %>%
+  mutate(sig = as.factor(ifelse(Q2.5 < 0 & Q97.5 > 0, 0, 1)),
+         index = as.factor(1:length(unique(dat1$pers)))) %>%
+  ggplot() +
+  ggtitle("B") +
   geom_errorbar(aes(x = index, 
                     ymin = Q2.5, 
                     ymax = Q97.5, 
@@ -34,44 +74,6 @@ plot.orig1 <- coef(wienermodel1, probs = c(0.025, 0.975))$pers[,,2] %>%
                  group = sig),
              size = 0.3, 
              alpha = 0.75) +
-  labs(y = expression(theta[OR(i)]), x = "") +
-  # plot options
-  theme(plot.title = element_text(face = "bold", hjust = 0.5),
-        panel.grid.major = element_blank(), 
-        panel.grid.minor = element_blank(),
-        axis.text.x = element_blank(),
-        axis.line.x = element_blank(),
-        axis.text.y = element_text(size = 12),
-        axis.title.y = element_text(size = 14),
-        strip.text = element_text(size = 9),
-        axis.ticks.x=element_blank()) +
-        scale_y_continuous(limits = c(-.7, 1.2), breaks = seq(from = -.7, to =1.2, by = 0.2)) 
-
-
-# plot utility effects S1
-plot.util1 <- coef(wienermodel1, probs = c(0.025, 0.975))$pers[,,3] %>%
-  data.frame() %>%
-  arrange(Estimate) %>%
-  mutate(sig = as.factor(ifelse(Q2.5 < 0 & Q97.5 > 0, 0, 1)),
-         index = as.factor(1:length(unique(dat1$pers)))) %>%
-  ggplot() +
-  ggtitle("B.") +
-  geom_errorbar(aes(x = index, 
-                    ymin = Q2.5, 
-                    ymax = Q97.5, 
-                    color = sig), 
-                show.legend = F,
-                width = 0) +
-  geom_hline(yintercept = 0,
-             alpha = 0.50, color = "red") +
-  geom_hline(yintercept = posterior_summary(wienermodel1, pars = "b_")[5,1],
-             alpha = 0.50,
-             linetype = "twodash") +
-  geom_point(aes(x = index, 
-                 y = Estimate,
-                 group = sig),
-             size = 0.3, 
-             alpha = 0.75) +
   labs(y = expression(theta[UT(i)]), x = "") +
   # plot options
   theme(plot.title = element_text(face = "bold", hjust = 0.5),
@@ -79,12 +81,14 @@ plot.util1 <- coef(wienermodel1, probs = c(0.025, 0.975))$pers[,,3] %>%
         panel.grid.minor = element_blank(),
         axis.text.x = element_blank(),
         axis.text.y = element_text(size = 12),
-        axis.title.y = element_text(size = 14),
+        axis.title.y = element_text(size = 14, margin = margin(r = 0)),
         axis.line.x = element_blank(),
         strip.background = element_rect(fill = "grey94"),
         strip.text = element_text(size = 9),
         axis.ticks.x=element_blank()) +
-        scale_y_continuous(limits = c(-.7, 1.2), breaks = seq(from = -.7, to =1.2, by = 0.2))
+        scale_y_continuous(limits = c(-.7, 1.2), breaks = seq(from = -.7, to =1.2, by = 0.2)) 
+# +
+#   draw_label("S1", -35, 1.38) + coord_cartesian(xlim = c(0, length(unique(dat1$pers))), ylim = c(-.7, 1.2), clip = "off")
 
 # plot originality effects S2
 plot.orig2 <- coef(wienermodel2, probs = c(0.025, 0.975))$pers[,,2] %>%
@@ -93,7 +97,46 @@ plot.orig2 <- coef(wienermodel2, probs = c(0.025, 0.975))$pers[,,2] %>%
   mutate(sig = as.factor(ifelse(Q2.5 < 0 & Q97.5 > 0, 0, 1)),
          index = as.factor(1:length(unique(dat2$pers)))) %>%
   ggplot() +
-  ggtitle("C.") +
+  ggtitle("C") +
+  geom_errorbar(aes(x = index, 
+                    ymin = Q2.5, 
+                    ymax = Q97.5, 
+                    color = sig), 
+                show.legend = F,
+                width = 0) +
+  geom_hline(yintercept = 0,
+             alpha = 0.50, color = "red") +
+  geom_hline(yintercept = posterior_summary(wienermodel2, pars = "b_")[3,1],
+             alpha = 0.50,
+             linetype = "twodash") +
+  geom_point(aes(x = index, 
+                 y = Estimate,
+                 group = sig),
+             size = 0.3, 
+             alpha = 0.75) +
+  labs(y = expression(theta[OR(i)]), x = "") +
+  # plot options
+  theme(plot.title = element_text(face = "bold", hjust = 0.5),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_text(size = 12),
+        axis.line.x = element_blank(),
+        axis.title.y = element_text(size = 14, margin = margin(r = 0)),
+        strip.text = element_text(size = 9),
+        axis.ticks.x=element_blank()) +
+        scale_y_continuous(limits = c(-.7, 1.2), breaks = seq(from = -.7, to =1.2, by = 0.2))
+# +
+#   draw_label("S2", -20, 1.38) + coord_cartesian(xlim = c(0, length(unique(dat2$pers))), ylim = c(-.7, 1.2), clip = "off")
+
+# plot utility effects S2
+plot.util2 <- coef(wienermodel2, probs = c(0.025, 0.975))$pers[,,3] %>%
+  data.frame() %>%
+  arrange(Estimate) %>%
+  mutate(sig = as.factor(ifelse(Q2.5 < 0 & Q97.5 > 0, 0, 1)),
+         index = as.factor(1:length(unique(dat2$pers)))) %>%
+  ggplot() +
+  ggtitle("D") +
   geom_errorbar(aes(x = index, 
                     ymin = Q2.5, 
                     ymax = Q97.5, 
@@ -110,43 +153,6 @@ plot.orig2 <- coef(wienermodel2, probs = c(0.025, 0.975))$pers[,,2] %>%
                  group = sig),
              size = 0.3, 
              alpha = 0.75) +
-  labs(y = expression(theta[OR(i)]), x = "") +
-  # plot options
-  theme(plot.title = element_text(face = "bold", hjust = 0.5),
-        panel.grid.major = element_blank(), 
-        panel.grid.minor = element_blank(),
-        axis.text.x = element_blank(),
-        axis.text.y = element_text(size = 12),
-        axis.line.x = element_blank(),
-        axis.title.y = element_text(size = 14),
-        strip.text = element_text(size = 9),
-        axis.ticks.x=element_blank()) +
-        scale_y_continuous(limits = c(-.7, 1.2), breaks = seq(from = -.7, to =1.2, by = 0.2))
-
-# plot utility effects S2
-plot.util2 <- coef(wienermodel2, probs = c(0.025, 0.975))$pers[,,3] %>%
-  data.frame() %>%
-  arrange(Estimate) %>%
-  mutate(sig = as.factor(ifelse(Q2.5 < 0 & Q97.5 > 0, 0, 1)),
-         index = as.factor(1:length(unique(dat2$pers)))) %>%
-  ggplot() +
-  ggtitle("D.") +
-  geom_errorbar(aes(x = index, 
-                    ymin = Q2.5, 
-                    ymax = Q97.5, 
-                    color = sig), 
-                show.legend = F,
-                width = 0) +
-  geom_hline(yintercept = 0,
-             alpha = 0.50, color = "red") +
-  geom_hline(yintercept = posterior_summary(wienermodel2, pars = "b_")[5,1],
-             alpha = 0.50,
-             linetype = "twodash") +
-  geom_point(aes(x = index, 
-                 y = Estimate,
-                 group = sig),
-             size = 0.3, 
-             alpha = 0.75) +
   labs(y = expression(theta[UT(i)]), x = "") +
   # plot options
   theme(plot.title = element_text(face = "bold", hjust = 0.5),
@@ -154,13 +160,19 @@ plot.util2 <- coef(wienermodel2, probs = c(0.025, 0.975))$pers[,,3] %>%
         panel.grid.minor = element_blank(),
         axis.text.x = element_blank(),
         axis.text.y = element_text(size = 12),
-        axis.title.y = element_text(size = 14),
+        axis.title.y = element_text(size = 14, margin = margin(r = 0)),
         axis.line.x = element_blank(),
         strip.background = element_rect(fill = "grey94"),
         strip.text = element_text(size = 9),
         axis.ticks.x=element_blank()) +
         scale_y_continuous(limits = c(-.7, 1.2), breaks = seq(from = -.7, to =1.2, by = 0.2))
+# +
+#   draw_label("S2", -20, 1.38) + coord_cartesian(xlim = c(0, length(unique(dat2$pers))), ylim = c(-.7, 1.2), clip = "off")
 
-plot_grid(plot.orig1, plot.util1, plot.orig2, plot.util2, nrow = 2)
+
+plot_grid(plot.orig1, plot.util1, plot.orig2, plot.util2, nrow = 2) +
+  draw_label("S1", 0.027,0.97, fontface = "bold") +
+  draw_label("S2", 0.027,0.47, fontface = "bold")
+
 ```
 

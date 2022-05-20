@@ -1,0 +1,237 @@
+---
+title: "Creative or not, Model Comparison"
+output:
+  pdf_document: papaja::apa6_pdf
+  html_document: default
+  word_document: papaja::apa6_word
+---
+
+```{r, include=FALSE, echo =F}
+knitr::opts_chunk$set(echo = FALSE, include = FALSE)
+```
+
+```{r}
+library(brms)
+library(dplyr)
+library(msm)
+```
+
+
+```{r 'read fulldat2 and clean data'}
+# load data
+fulldat2 <- read.csv("../../Data/Study2/CON_S2.csv")
+
+#################
+# Data cleaning #
+#################
+
+
+## same response in at least 90% of the trials
+excl1_2 <- fulldat2 %>%
+  group_by(pers) %>%
+  summarize(countCreative = sum(creative)/n(), 
+            countNotCreative = 1-(sum(creative)/n())) %>%
+  ungroup() %>% 
+  filter(countCreative >= 0.9 | countNotCreative >= 0.9)
+
+# exclude participants based on 90% criterion and remove first two responses
+dat2_excl1_2 <- fulldat2 %>% 
+  filter(!(pers %in% excl1_2$pers)) %>%
+# remove first two trials
+  group_by(pers) %>% 
+  slice(3:n()) %>% 
+  ungroup()
+
+# remove RT > 6s and < 0.3s
+dat2_excl2 <- dat2_excl1_2 %>% 
+  filter(rt <= 6000  &  rt >= 300)
+
+# exclude participants with fewer than 47 trials
+excl3_2 <- dat2_excl2 %>% 
+  group_by(pers) %>% 
+  count() %>% 
+  ungroup() %>% 
+  filter(n < 47)
+
+dat2 <- dat2_excl2 %>%
+  filter(!(pers %in% excl3_2$pers)) %>% 
+  # turn rt into seconds
+  mutate(rt = rt/1000)
+
+```
+
+```{r 'est settings model comparison'}
+warmup2 <- 500
+iter2 <- 8000
+chains2 <- 4
+cores2 <- 4
+max_td2 <- 15
+adapt_d2 <- .99
+```
+
+
+```{r 'estimation of model without utility effects', cache = T}
+# turn variables into factor and create numeric response variable for estimation
+dat2$pers <- as.factor(dat2$pers)
+dat2$itemid <- as.factor(dat2$itemid)
+dat2$rt <- as.numeric(dat2$rt)
+dat2$creative <- as.numeric(dat2$creative)
+# model formula
+formula <- bf(rt | dec(creative) ~ 1 + (1|itemid) + orig.rating_s + (1 + orig.rating_s|p|pers),
+              bs ~ 0 + Intercept + (1|p|pers),
+              bias ~ 1 + (1|p|pers))
+
+
+  get_prior(formula,
+            data = dat2, 
+            family = wiener(link_bs = "identity",
+                            link_ndt = "identity",
+                            link_bias = "identity"))
+# set priors
+prior <- c(
+  prior("lkj(3)", class = "cor"),
+  prior("normal(0, 0.2)", class = "b", lb = 0),
+  prior("normal(0, 0.3)", class = "sd"),
+  set_prior("normal(0, 1)", class = "Intercept"),
+  set_prior("beta(1, 1)", class = "Intercept", dpar = "bias"),
+  set_prior("normal(0, 2)", class = "b", dpar = "bs", lb = 0),
+  set_prior("normal(0, 0.3)", class = "sd", dpar =  "bias"),
+  set_prior("normal(0, 0.3)", class = "sd", dpar =  "bs"),
+  set_prior("normal(0, 0.3)", class = "sd", group = "pers"),
+  set_prior("normal(0, 0.3)", class = "sd", group = "itemid"))
+
+make_stancode(formula,
+              family = wiener(link_bs = "identity",
+                              link_ndt = "identity",
+                              link_bias = "identity"),
+              data = dat2,
+              prior = prior)
+
+initfun <- function() {
+  list(
+    Intercept_bs = runif(tmp_dat$K_bs, 1, 2),
+    ndt = 0.01,
+    Intercept_bias = 0.51,
+    L_2 = diag(tmp_dat$M_2),
+    z_2 = matrix(rnorm(tmp_dat$M_2*tmp_dat$N_2, 0, 0.01),
+                 tmp_dat$M_2, tmp_dat$N_2)
+  )
+}
+
+tmp_dat <- make_standata(formula, 
+                         family = wiener(link_bs = "identity",
+                                         link_ndt = "identity",
+                                         link_bias = "identity"),
+                         data = dat2, prior = prior)
+# model estimation
+fit_wiener_without_utility <- brm(formula, 
+                   data = dat2,
+                   family = wiener(link_bs = "identity", 
+                                   link_ndt = "identity",
+                                   link_bias = "identity"),
+                   prior = prior, inits = initfun,
+                   iter = iter2, warmup = warmup2, chains = chains2, cores = cores2, sample_prior = T,
+                   save_all_pars = TRUE,
+                   control = list(max_treedepth = max_td2, adapt_delta = adapt_d2))
+
+save(fit_wiener_without_utility, file = "fit_wiener_without_utility.Rda", compress = "xz")
+```
+
+```{r, cache = T}
+# turn variables into factor and create numeric response variable for estimation
+dat2$pers <- as.factor(dat2$pers)
+dat2$itemid <- as.factor(dat2$itemid)
+dat2$rt <- as.numeric(dat2$rt)
+dat2$creative <- as.numeric(dat2$creative)
+# model formula
+formula <- bf(rt | dec(creative) ~ 1 + (1|itemid) + orig.rating_s + util.rating_s + (1 + orig.rating_s + util.rating_s|p|pers),
+              bs ~ 0 + Intercept + (1|p|pers),
+              bias ~ 1 + (1|p|pers))
+
+
+  get_prior(formula,
+            data = dat2, 
+            family = wiener(link_bs = "identity",
+                            link_ndt = "identity",
+                            link_bias = "identity"))
+# set priors
+prior <- c(
+  prior("lkj(3)", class = "cor"),
+  prior("normal(0, 0.2)", class = "b", lb = 0),
+  prior("normal(0, 0.3)", class = "sd"),
+  set_prior("normal(0, 1)", class = "Intercept"),
+  set_prior("beta(1, 1)", class = "Intercept", dpar = "bias"),
+  set_prior("normal(0, 2)", class = "b", dpar = "bs", lb = 0),
+  set_prior("normal(0, 0.3)", class = "sd", dpar =  "bias"),
+  set_prior("normal(0, 0.3)", class = "sd", dpar =  "bs"),
+  set_prior("normal(0, 0.3)", class = "sd", group = "pers"),
+  set_prior("normal(0, 0.3)", class = "sd", group = "itemid"))
+
+make_stancode(formula,
+              family = wiener(link_bs = "identity",
+                              link_ndt = "identity",
+                              link_bias = "identity"),
+              data = dat2,
+              prior = prior)
+
+initfun <- function() {
+  list(
+    b = rtnorm(2, mean = 0, sd = 0.5, lower = 0),
+    Intercept_bs = runif(tmp_dat$K_bs, 1, 2),
+    ndt = 0.01,
+    Intercept_bias = 0.51,
+    L_2 = diag(tmp_dat$M_2),
+    z_2 = matrix(rnorm(tmp_dat$M_2*tmp_dat$N_2, 0, 0.01),
+                 tmp_dat$M_2, tmp_dat$N_2)
+  )
+}
+
+tmp_dat <- make_standata(formula, 
+                         family = wiener(link_bs = "identity",
+                                         link_ndt = "identity",
+                                         link_bias = "identity"),
+                         data = dat2, prior = prior)
+# model estimation
+fit_wiener_with_utility <- brm(formula, 
+                   data = dat2,
+                   family = wiener(link_bs = "identity", 
+                                   link_ndt = "identity",
+                                   link_bias = "identity"),
+                   prior = prior, inits = initfun,
+                   save_all_pars = TRUE,
+                   iter = iter2, warmup = warmup2, chains = chains2, cores = cores2, sample_prior = T,
+                   control = list(max_treedepth = max_td2, adapt_delta = adapt_d2))
+
+
+save(fit_wiener_with_utility, file = "fit_wiener_with_utility.Rda", compress = "xz")
+```
+
+
+```{r 'brige sampling'}
+bridgesampling_without_utility <- purrr::rerun(10, brms::bridge_sampler(fit_wiener_without_utility, cores = 4))
+save(bridgesampling_without_utility, file = "bridgesampling_without_utility.Rda")
+
+
+bridgesampling_with_utility <- purrr::rerun(10, brms::bridge_sampler(fit_wiener_with_utility, cores = 4))
+save(bridgesampling_with_utility, file = "bridgesampling_with_utility.Rda")
+```
+
+```{r}
+logml_without_utility <- numeric(10)
+for(i in 1:10){
+ logml_without_utility[i] <- bridgesampling_without_utility[[i]]$logml
+}
+range(logml_without_utility)
+
+logml_with_utility <- numeric(10)
+for(i in 1:10){
+ logml_with_utility[i] <- bridgesampling_with_utility[[i]]$logml
+}
+range(logml_with_utility)
+
+
+bfrange <- c(exp(max(logml_with_utility) - min(logml_without_utility)), exp(min(logml_with_utility) - max(logml_without_utility)))
+```
+
+
+

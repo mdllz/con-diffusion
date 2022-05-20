@@ -8,10 +8,10 @@ output:
 ```{r 'resCORtable', results = "asis", fig.pos = 'h'}
 summary1 <- summary(wienermodel1)
 CORsummary_wienermodel1 <- data.frame(summary1$random$pers)[-(1:4),]
-rownames(CORsummary_wienermodel1) <- c("$\\rho_{\\sigma_{\\delta}\\sigma_{\\theta_{OR}}}$"
-                            , "$\\rho_{\\sigma_{\\delta}\\sigma_{\\theta_{UT}}}$"
+rownames(CORsummary_wienermodel1) <- c("$\\rho_{\\sigma_{\\delta_{\\nu}}\\sigma_{\\theta_{OR}}}$"
+                            , "$\\rho_{\\sigma_{\\delta_{\\nu}}\\sigma_{\\theta_{UT}}}$"
                             , "$\\rho_{\\sigma_{\\theta_{OR}}\\sigma_{\\theta_{UT}}}$"
-                            , "$\\rho_{\\sigma_{\\delta}\\sigma_{\\alpha}}$"
+                            , "$\\rho_{\\sigma_{\\delta_{\\nu}}\\sigma_{\\alpha}}$"
                             , "$\\rho_{\\sigma_{\\theta_{OR}}\\sigma_{\\alpha}}$"
                             , "$\\rho_{\\sigma_{\\theta_{UT}}\\sigma_{\\alpha}}$")
 colnames(CORsummary_wienermodel1) <- c("Mean","SE", "LB", "UB", "Rhat", "Bulk_ESS", "Tail_ESS")
@@ -23,13 +23,13 @@ CORsummary_wienermodel1 %<>%
 
 summary2 <- summary(wienermodel2)
 CORsummary_wienermodel2 <- data.frame(summary2$random$pers)[-(1:5),]
-rownames(CORsummary_wienermodel2) <- c("$\\rho_{\\sigma_{\\delta}\\sigma_{\\theta_{OR}}}$"
-                            , "$\\rho_{\\sigma_{\\delta}\\sigma_{\\theta_{UT}}}$"
+rownames(CORsummary_wienermodel2) <- c("$\\rho_{\\sigma_{\\delta_{\\nu}}\\sigma_{\\theta_{OR}}}$"
+                            , "$\\rho_{\\sigma_{\\delta_{\\nu}}\\sigma_{\\theta_{UT}}}$"
                             , "$\\rho_{\\sigma_{\\theta_{OR}}\\sigma_{\\theta_{UT}}}$"
-                            , "$\\rho_{\\sigma_{\\delta}\\sigma_{\\alpha}}$"
+                            , "$\\rho_{\\sigma_{\\delta_{\\nu}}\\sigma_{\\alpha}}$"
                             , "$\\rho_{\\sigma_{\\theta_{OR}}\\sigma_{\\alpha}}$"
                             , "$\\rho_{\\sigma_{\\theta_{UT}}\\sigma_{\\alpha}}$"
-                            , "$\\rho_{\\sigma_{\\delta}\\sigma_{\\beta}}$"
+                            , "$\\rho_{\\sigma_{\\delta_{\\nu}}\\sigma_{\\beta}}$"
                             , "$\\rho_{\\sigma_{\\theta_{OR}}\\sigma_{\\beta}}$"
                             , "$\\rho_{\\sigma_{\\theta_{UT}}\\sigma_{\\beta}}$"
                             , "$\\rho_{\\sigma_{\\alpha}\\sigma_{\\beta}}$")

@@ -6,17 +6,18 @@ output:
   word_document: papaja::apa6_word
 ---
 
-```{r 'plotRT', dev = "pdf", dpi = 300, fig.pos = "H", fig.cap = "A and C show the mean stimulus response times as a function of stimulus originality and utility in Study 1 and 2, respectively. Each dot represents a stimulus. Low and high utility stimuli were categorized by median split. B and D show the distribution of mean response times for 'creative' and 'not creative' responses. Each dot represents a participant.",fig.height = 5, fig.width = 6, fig.align = 'center'}
+```{r 'plotRT', dev = "pdf", dpi = 300, fig.pos = "H", fig.cap = "A and C show the mean stimulus response times as a function of stimulus originality and utility in Study 1 and 2, respectively. Each dot represents a stimulus. Low and high utility stimuli were categorized by median split. B and D show the distribution of mean response times for participants' ’creative’ and ’not creative’ decisions.",fig.height = 5, fig.width = 6, fig.align = 'center'}
 
 theme_set(papaja::theme_apa())
 
 p1 <- 
   dat1 %>% 
-  mutate(util = ifelse(util.rating_s > median(util.rating_s), 1, 0)) %>% 
+  mutate(util = ifelse(util.rating_s >= median(util.rating_s), 1, 0)) %>% 
   group_by(itemid) %>% 
   summarize(rt = mean(rt),
             util = util,
             orig = orig.rating_s) %>% 
+  ungroup() %>% 
   distinct() %>% 
   #plot
   ggplot(aes(orig, rt)) +
@@ -26,17 +27,20 @@ p1 <-
   scale_y_continuous(breaks = seq(0, 3.5, by = 0.5), limits = c(0,3.5)) +
   labs(x = "Stimulus Originality",
        y = "RT (in s)") +
-  ggtitle("A.") +
-  theme(plot.title = element_text(face = "bold", hjust = 0.5))
+  ggtitle("A") +
+  theme(plot.title = element_text(face = "bold", hjust = 0.5),
+        axis.title.y = element_text(margin = margin(r = 3)),
+        axis.title.x = element_text(margin = margin(r = 3)))
 
 
 p2 <- 
   dat2 %>% 
-  mutate(util = ifelse(util.rating_s > median(util.rating_s), 1, 0)) %>% 
+  mutate(util = ifelse(util.rating_s >= median(util.rating_s), 1, 0)) %>% 
   group_by(itemid) %>% 
   summarize(rt = mean(rt),
             util = util,
             orig = orig.rating_s) %>% 
+  ungroup() %>% 
   distinct() %>% 
   #plot
   ggplot(aes(orig, rt)) +
@@ -46,14 +50,17 @@ p2 <-
   facet_wrap( ~ util, labeller = as_labeller(c(`0`="Low Utility", `1`="High Utility", size = 0.4))) +
   labs(x = "Stimulus Originality",
        y = "RT (in s)") +
-  ggtitle("C.") +
-  theme(plot.title = element_text(face = "bold", hjust = 0.5))
+  ggtitle("C") +
+  theme(plot.title = element_text(face = "bold", hjust = 0.5),
+        axis.title.y = element_text(margin = margin(r = 3)),
+        axis.title.x = element_text(margin = margin(r = 3)))
 
 
 
 p3 <- dat1 %>% 
   group_by(pers, creative) %>% 
   summarize(rt = mean(rt)) %>% 
+  ungroup() %>% 
   ggplot(aes(x = factor(creative), y = rt)) +
   geom_violin(alpha=0.9, aes(fill = factor(creative))) +
   geom_boxplot(width=0.1) +
@@ -61,14 +68,17 @@ p3 <- dat1 %>%
   scale_y_continuous("RT (in s)", breaks = seq(0, 3.5, by = 0.5), limits = c(0,3.5)) +
   scale_fill_brewer(palette = 3) +
   theme(legend.position =  "none") +
-  ggtitle("B.")+
-  theme(plot.title = element_text(face = "bold", hjust = 0.5))
+  ggtitle("B")+
+  theme(plot.title = element_text(face = "bold", hjust = 0.5),
+        axis.title.y = element_text(margin = margin(r = 3)),
+        axis.title.x = element_text(margin = margin(r = 3)))
 
 
 
 p4 <- dat2 %>% 
   group_by(pers, creative) %>% 
   summarize(rt = mean(rt)) %>% 
+  ungroup() %>% 
   ggplot(aes(x = factor(creative), y = rt)) +
   geom_violin(alpha=0.9, aes(fill = factor(creative))) +
   geom_boxplot(width=0.1) +
@@ -76,10 +86,14 @@ p4 <- dat2 %>%
   scale_y_continuous("RT (in s)", breaks = seq(0, 3.5, by = 0.5), limits = c(0,3.5)) +
   scale_fill_brewer(palette = 3) +
   theme(legend.position =  "none") +
-  ggtitle("D.")+
-  theme(plot.title = element_text(face = "bold", hjust = 0.5))
+  ggtitle("D")+
+  theme(plot.title = element_text(face = "bold", hjust = 0.5),
+        axis.title.y = element_text(margin = margin(r = 3)),
+        axis.title.x = element_text(margin = margin(r = 3)))
 
 
-plot_grid(p1, p3, p2, p4, nrow = 2)
+plot_grid(p1, p3, p2, p4, nrow = 2) +
+  draw_label("S1", 0.027,0.97, fontface = "bold") +
+  draw_label("S2", 0.027,0.47, fontface = "bold")
 ```
 

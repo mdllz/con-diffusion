@@ -9,7 +9,7 @@ output:
 samples1 <- 500
 ```
 
-```{r 'sampling from post pred distribution 2', include = F, eval = TRUE}
+```{r 'sampling from post pred distribution 2', include = F}
 # To obtain samples from the posterior predictive distribution, load the previously estimated model
 load(file = "../../Analysis/wienermodel2.Rda")
 # Negative RTs denote a "not creative" response
@@ -27,37 +27,40 @@ save(pred_wienerS2, file = "pred_wienerS2.Rda",  compress = "xz")
 # load data
 fulldat2 <- read.csv("../../Data/Study2/CON_S2.csv")
 
-##############
-# clean data #
-##############
+#################
+# Data cleaning #
+#################
+
 
 ## same response in at least 90% of the trials
-excl1 <- fulldat2 %>%
+excl1_2 <- fulldat2 %>%
   group_by(pers) %>%
   summarize(countCreative = sum(creative)/n(), 
             countNotCreative = 1-(sum(creative)/n())) %>%
+  ungroup() %>% 
   filter(countCreative >= 0.9 | countNotCreative >= 0.9)
 
 # exclude participants based on 90% criterion and remove first two responses
-dat2_excl1 <- fulldat2 %>% 
-  filter(!(pers %in% excl1$pers)) %>%
+dat2_excl1_2 <- fulldat2 %>% 
+  filter(!(pers %in% excl1_2$pers)) %>%
 # remove first two trials
   group_by(pers) %>% 
   slice(3:n()) %>% 
   ungroup()
 
 # remove RT > 6s and < 0.3s
-dat2_excl2 <- dat2_excl1 %>% 
-  filter(rt <= 6000  &  rt > 300)
+dat2_excl2 <- dat2_excl1_2 %>% 
+  filter(rt <= 6000  &  rt >= 300)
 
 # exclude participants with fewer than 47 trials
-excl3 <- dat2_excl2 %>% 
+excl3_2 <- dat2_excl2 %>% 
   group_by(pers) %>% 
   count() %>% 
+  ungroup() %>% 
   filter(n < 47)
 
 dat2 <- dat2_excl2 %>%
-  filter(!(pers %in% excl3$pers)) %>% 
+  filter(!(pers %in% excl3_2$pers)) %>% 
   # turn rt into seconds
   mutate(rt = rt/1000)
 ```
@@ -95,7 +98,8 @@ d_data_s2_agg <- d_data_s2 %>%
                             hh = quantile(., probs = 0.9, na.rm = TRUE),
                             hhh = quantile(., probs = 0.975, na.rm = TRUE),
                             hhhh = quantile(., probs = 0.99, na.rm = TRUE)
-               ))
+               )) %>% 
+  ungroup()
 
 # Now the same for the observed data:
 data_agg_s2 <- dat2 %>% 
@@ -104,7 +108,7 @@ data_agg_s2 <- dat2 %>%
   summarise(prob.upper = mean(creative == "1"),
             medrt.upper = median(rt[creative == "1"]),
             medrt.lower = median(rt[creative == "0"])) %>% 
-  ungroup %>% 
+  ungroup() %>% 
   left_join(d_data_s2_agg)
 ```
 
@@ -240,7 +244,8 @@ pp2 <- d_data_s2 %>%
   separate("key", c("rep", "boundary"), sep = "_") %>% 
   unnest(value) %>% 
   group_by(pers, boundary, rowname) %>% # grouping vars + new vars
-  summarise(predicted = mean(q, na.rm = TRUE))
+  summarise(predicted = mean(q, na.rm = TRUE)) %>% 
+  ungroup()
 rt_pp_s2 <- dat2 %>% 
   dplyr::mutate(pers = as.numeric(as.character(pers))) %>% 
   dplyr::group_by(pers) %>% # select grouping vars
@@ -301,3 +306,44 @@ p_notcreative <- rt_pp_s2 %>%
 grid.arrange(p_creative, p_notcreative, ncol = 1)
 ```
 
+
+```{r 'qq  plot proportions 2', cache = T}
+quantiles <- c(0.1, 0.25, 0.5, 0.75, 0.9)
+
+pp2_dec_2 <- d_data_s2 %>% 
+  mutate(across(starts_with("V"), ~ ifelse(.x < 0, 0, 1))) %>% 
+  dplyr::group_by(pers) %>%  # select grouping var
+  summarize(across(starts_with("V"),~ mean(.x))) %>% 
+  ungroup() %>% 
+  gather("key", "value", - pers) %>% # remove grouping var
+  separate("key", "rep", sep = "_") %>% 
+  group_by(pers) %>% # grouping vars + new vars
+  summarise(predicted = mean(value, na.rm = TRUE))
+
+rt_pp_dec_2 <- dat2 %>% 
+  dplyr::mutate(pers = as.numeric(as.character(pers))) %>% 
+  dplyr::group_by(pers) %>% # select grouping vars
+  summarise(observed = mean(creative, na.rm = T)) %>% 
+  ungroup() %>% 
+  left_join(pp2_dec_2)
+
+plottext_dec_2 <- rt_pp_dec_2 %>% 
+  summarise(ccc = format(
+    CCC(observed, predicted, na.rm = TRUE)$rho.c$est, 
+    digits = 2))
+
+p_dec_2 <- rt_pp_dec_2 %>% 
+  ggplot(aes(x = observed, predicted)) +
+  geom_abline(slope = 1, intercept = 0) +
+  geom_point() +
+  coord_fixed() +
+  geom_text(data=plottext_dec_2,
+            aes(x = 0.8, y = 0.9,label=ccc), 
+            parse = TRUE, inherit.aes=FALSE) +
+  ggtitle("'Proportion 'Creative' responses Study 2") +
+  theme_bw() +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank())
+
+```

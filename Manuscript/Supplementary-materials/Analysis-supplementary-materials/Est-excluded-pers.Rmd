@@ -16,6 +16,7 @@ excl1 <- fulldat2 %>%
   group_by(pers) %>%
   summarize(countCreative = sum(creative)/n(), 
             countNotCreative = 1-(sum(creative)/n())) %>%
+  ungroup() %>% 
   filter(countCreative >= 0.9 | countNotCreative >= 0.9)
 
 # exclude participants based on 90% criterion and remove first two responses
@@ -28,26 +29,32 @@ dat2_excl1 <- fulldat2 %>%
 
 # remove RT > 6s and < 0.3s
 dat2_excl <- dat2_excl1 %>% 
-  filter(rt <= 6000  &  rt > 300)
+  filter(rt <= 6000  &  rt >= 300)
 ```
 
-```{r, cache = T, eval = TRUE}
+```{r, cache = TRUE}
+warmup2 <- 500
+iter2 <- 4000
+chains2 <- 4
+cores2 <- 4
+max_td2 <- 15
+adapt_d2 <- .99
 # turn variables into factor and create numeric response variable for estimation
 dat2_excl$pers <- as.factor(dat2_excl$pers)
 dat2_excl$itemid <- as.factor(dat2_excl$itemid)
 dat2_excl$rt <- as.numeric(dat2_excl$rt)/1000
 dat2_excl$creative <- as.numeric(dat2_excl$creative)
-
 # model formula
 formula <- bf(rt | dec(creative) ~ 1 + (1|itemid) + orig.rating_s + util.rating_s + (1 + orig.rating_s + util.rating_s|p|pers),
-              bs ~ 1 + (1|p|pers),
+              bs ~ 0 + Intercept + (1|p|pers),
               bias ~ 1 + (1|p|pers))
 
-# get_prior(formula,
-#           data = dat2_excl, 
-#           family = wiener(link_bs = "identity",
-#                           link_ndt = "identity",
-#                           link_bias = "identity"))
+
+  get_prior(formula,
+            data = dat2_excl, 
+            family = wiener(link_bs = "identity",
+                            link_ndt = "identity",
+                            link_bias = "identity"))
 # set priors
 prior <- c(
   prior("lkj(3)", class = "cor"),
@@ -55,12 +62,11 @@ prior <- c(
   prior("normal(0, 0.3)", class = "sd"),
   set_prior("normal(0, 1)", class = "Intercept"),
   set_prior("beta(1, 1)", class = "Intercept", dpar = "bias"),
-  set_prior("normal(0, 2)", class = "Intercept", dpar = "bs"),
+  set_prior("normal(0, 2)", class = "b", dpar = "bs", lb = 0),
   set_prior("normal(0, 0.3)", class = "sd", dpar =  "bias"),
   set_prior("normal(0, 0.3)", class = "sd", dpar =  "bs"),
   set_prior("normal(0, 0.3)", class = "sd", group = "pers"),
-  set_prior("normal(0, 0.3)", class = "sd", group = "itemid"),
-  set_prior("uniform(0, 300)", class = "ndt"))
+  set_prior("normal(0, 0.3)", class = "sd", group = "itemid"))
 
 make_stancode(formula,
               family = wiener(link_bs = "identity",
@@ -96,22 +102,12 @@ fit_wiener_excl <- brm(formula,
                    iter = iter2, warmup = warmup2, chains = chains2, cores = cores2, sample_prior = T,
                    control = list(max_treedepth = max_td2, adapt_delta = adapt_d2))
 
-save(fit_wiener_excl, file = "fit_wiener_excl2.Rda", compress = "xz")
-
+save(fit_wiener_excl, file = "fit_wiener_excl.Rda", compress = "xz")
 ```
+
 
 ```{r 'load model from S2'}
 wienermodel2_excl <- fit_wiener_excl
 load("../../Analysis/wienermodel2.Rda")
 ```
-
-```{r 'S2 hypotheses tests  CON task', include = F}
-# H2
-h2 <- hypothesis(fit_wiener_excl, "util.rating_s = 0")
-plot(h2)
-1/h2$hypothesis$Evid.Ratio
-```
-
-
-
 

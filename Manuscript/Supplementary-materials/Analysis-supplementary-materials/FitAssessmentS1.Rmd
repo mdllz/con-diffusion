@@ -9,18 +9,18 @@ output:
 samples1 <- 500
 ```
 
-```{r 'sampling from post pred distribution', include = F, eval = T}
+```{r 'sampling from post pred distribution', include = F}
 # To obtain 500 samples from the posterior predictive distribution, load the previously saved model fit 
 load(file = "../../Analysis/wienermodel1.Rda")
 
 # Negative RTs denote a "not creative" response
 
-pred_wienerS1.bias2 <- predict(wienermodel1, 
+pred_wienerS1 <- predict(wienermodel1, 
                        summary = FALSE, 
                        negative_rt = TRUE, 
                        nsamples = samples1)
 
-save(pred_wienerS1.bias, file = "pred_wienerS1.bias2.Rda",  compress = "xz")
+save(pred_wienerS1, file = "pred_wienerS1.Rda",  compress = "xz")
 ```
 
 ```{r 'read dat1 and clean and prepare'}
@@ -36,6 +36,7 @@ excl1 <- fulldat1 %>%
   group_by(pers) %>%
   summarize(countCreative = sum(creative)/n(), 
             countNotCreative = 1-(sum(creative)/n())) %>%
+  ungroup() %>% 
   filter(countCreative >= 0.9 | countNotCreative >= 0.9)
 
 # exclude participants based on 90% criterion and remove first two responses
@@ -48,13 +49,14 @@ dat1_excl1 <- fulldat1 %>%
 
 # remove RT > 6s and < 0.3s
 dat1_excl2 <- dat1_excl1 %>% 
-  filter(rt <= 6000  &  rt > 300)
+  filter(rt <= 6000  &  rt >= 300)
 
 # exclude participants with fewer than 47 trials
 excl3 <- dat1_excl2 %>% 
   group_by(pers) %>% 
   count() %>% 
-  filter(n < 47)
+  ungroup() %>% 
+  filter(n < 47) 
 
 dat1 <- dat1_excl2 %>%
   filter(!(pers %in% excl3$pers)) %>% 
@@ -65,7 +67,7 @@ dat1 <- dat1_excl2 %>%
 ```{r 'combine data and samples', message = F, warning  =  F, include = F}
 # combine data with posterior predictive samples
 
-d_data <- as_tibble(cbind(dat1, as_tibble(t(pred_wienerS1.bias2))))
+d_data <- as_tibble(cbind(dat1, as_tibble(t(pred_wienerS1))))
 ```
 
 ```{r 'checkRTs and proportions', include = F}
@@ -95,7 +97,8 @@ d_data_agg <- d_data %>%
                             hh = quantile(., probs = 0.9, na.rm = TRUE),
                             hhh = quantile(., probs = 0.975, na.rm = TRUE),
                             hhhh = quantile(., probs = 0.99, na.rm = TRUE)
-               ))
+               )) %>% 
+  ungroup()
 
 # Now the same for the observed data:
 data_agg <- dat1 %>% 
@@ -104,7 +107,7 @@ data_agg <- dat1 %>%
   summarise(prob.upper = mean(creative == "1"),
             medrt.upper = median(rt[creative == "1"]),
             medrt.lower = median(rt[creative == "0"])) %>% 
-  ungroup %>% 
+  ungroup() %>% 
   left_join(d_data_agg)
 ```
 
@@ -170,6 +173,8 @@ p3 <- ggplot(d_data_agg2, aes(x = 1)) +
 grid.arrange(p1, p2, p3, ncol = 2)
 ```
 
+
+
 ```{r, warning = F, include = F,  eval = F, include = F}
 # Predicted response probabilities at the participant level. This code creates plots that show the predicted and observed response probabilities for each participant.
 
@@ -186,6 +191,7 @@ for(i in seq(1,293, by = 11)){
   axis(1, at = d$pers)
 }
 ```
+
 
 ```{r 'coverage probabilities', include = F}
 # Compute the proportion of participants for which the observed test statistics falls into the CrIs (i.e., 50%, 80%, 95%, and 99%)
@@ -301,3 +307,44 @@ p_notcreative <- rt_pp %>%
 grid.arrange(p_creative, p_notcreative, ncol = 1)
 ```
 
+```{r 'qq  plot proportions', cache = T}
+
+quantiles <- c(0.1, 0.25, 0.5, 0.75, 0.9)
+
+pp2_dec <- d_data %>% 
+  mutate(across(starts_with("V"), ~ ifelse(.x < 0, 0, 1))) %>% 
+  dplyr::group_by(pers) %>%  # select grouping var
+  summarize(across(starts_with("V"),~ mean(.x))) %>% 
+  ungroup() %>% 
+  gather("key", "value", - pers) %>% # remove grouping var
+  separate("key", "rep", sep = "_") %>% 
+  group_by(pers) %>% # grouping vars + new vars
+  summarise(predicted = mean(value, na.rm = TRUE))
+rt_pp_dec <- dat1 %>% 
+  dplyr::mutate(pers = as.numeric(as.character(pers))) %>% 
+  dplyr::group_by(pers) %>% # select grouping vars
+  summarise(observed = mean(creative, na.rm = T)) %>% 
+  ungroup() %>% 
+  left_join(pp2_dec)
+
+plottext_dec <- rt_pp_dec %>% 
+  summarise(ccc = format(
+    CCC(observed, predicted, na.rm = TRUE)$rho.c$est, 
+    digits = 2))
+
+p_dec <- rt_pp_dec %>% 
+  ggplot(aes(x = observed, predicted)) +
+  geom_abline(slope = 1, intercept = 0) +
+  geom_point() +
+  coord_fixed() +
+  geom_text(data=plottext_dec,
+            aes(x = 0.8, y = 0.9,label=ccc), 
+            parse = TRUE, inherit.aes=FALSE) +
+  ggtitle("'Proportion 'Creative' responses Study 1") +
+  theme_bw() +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank())
+
+
+```

@@ -1,0 +1,91 @@
+---
+title: "Creative or not, Plot fit assessment"
+output:
+  pdf_document: papaja::apa6_pdf
+  html_document: default
+  word_document: papaja::apa6_word
+---
+```{r 'FAplot3', dev = "pdf", dpi = 300, fig.pos = "H", fig.cap = "Posterior predictive check of the proportion of 'creative' responses in Study 1 and Study 2. Each dot represents a participant.", fig.align = 'center'}
+
+# Study 1
+
+quantiles <- c(0.1, 0.25, 0.5, 0.75, 0.9)
+
+pp2_dec <- d_data %>% 
+  mutate(across(starts_with("V"), ~ ifelse(.x < 0, 0, 1))) %>% 
+  dplyr::group_by(pers) %>%  # select grouping var
+  summarize(across(starts_with("V"),~ mean(.x))) %>% 
+  ungroup() %>% 
+  gather("key", "value", - pers) %>% # remove grouping var
+  separate("key", "rep", sep = "_") %>% 
+  group_by(pers) %>% # grouping vars + new vars
+  summarise(predicted = mean(value, na.rm = TRUE))
+rt_pp_dec <- dat1 %>% 
+  dplyr::mutate(pers = as.numeric(as.character(pers))) %>% 
+  dplyr::group_by(pers) %>% # select grouping vars
+  summarise(observed = mean(creative, na.rm = T)) %>% 
+  ungroup() %>% 
+  left_join(pp2_dec)
+
+plottext_dec <- rt_pp_dec %>% 
+  summarise(ccc = format(
+    CCC(observed, predicted, na.rm = TRUE)$rho.c$est, 
+    digits = 2))
+
+p_dec <- rt_pp_dec %>% 
+  ggplot(aes(x = observed, predicted)) +
+  geom_abline(slope = 1, intercept = 0) +
+  geom_point() +
+  coord_fixed() +
+  geom_text(data=plottext_dec,
+            aes(x = 0.8, y = 0.9,label=ccc), 
+            parse = TRUE, inherit.aes=FALSE) +
+  ggtitle("Study 1\nProportion 'Creative' responses") +
+  theme_bw() +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank())
+
+# Study 2
+
+quantiles <- c(0.1, 0.25, 0.5, 0.75, 0.9)
+
+pp2_dec_2 <- d_data_s2 %>% 
+  mutate(across(starts_with("V"), ~ ifelse(.x < 0, 0, 1))) %>% 
+  dplyr::group_by(pers) %>%  # select grouping var
+  summarize(across(starts_with("V"),~ mean(.x))) %>% 
+  ungroup() %>% 
+  gather("key", "value", - pers) %>% # remove grouping var
+  separate("key", "rep", sep = "_") %>% 
+  group_by(pers) %>% # grouping vars + new vars
+  summarise(predicted = mean(value, na.rm = TRUE))
+
+rt_pp_dec_2 <- dat2 %>% 
+  dplyr::mutate(pers = as.numeric(as.character(pers))) %>% 
+  dplyr::group_by(pers) %>% # select grouping vars
+  summarise(observed = mean(creative, na.rm = T)) %>% 
+  ungroup() %>% 
+  left_join(pp2_dec_2)
+
+plottext_dec_2 <- rt_pp_dec_2 %>% 
+  summarise(ccc = format(
+    CCC(observed, predicted, na.rm = TRUE)$rho.c$est, 
+    digits = 2))
+
+p_dec_2 <- rt_pp_dec_2 %>% 
+  ggplot(aes(x = observed, predicted)) +
+  geom_abline(slope = 1, intercept = 0) +
+  geom_point() +
+  coord_fixed() +
+  geom_text(data=plottext_dec_2,
+            aes(x = 0.8, y = 0.9,label=ccc), 
+            parse = TRUE, inherit.aes=FALSE) +
+  ggtitle("Study 2\nProportion 'Creative' responses") +
+  theme_bw() +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank())
+
+grid.arrange(p_dec, p_dec_2, ncol =  2)
+```
+

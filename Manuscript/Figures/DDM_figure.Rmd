@@ -6,11 +6,11 @@ output:
   word_document: papaja::apa6_word
 ---
 
-```{r 'DDMfigure', fig.cap = "A graphical illustration of the DDM; $\\alpha$ = boundary separation, indicating the evidence required to response 'Creative' or 'Not creative'; $\\beta$ = initial bias as a proportion of $\\alpha$ indicating the tendency to choose one response over the other; $\\delta$ = average drift rate, indicating the rate of information accumulation; $\\tau$ = non-decision time, indicating the time used for processes apart from the actual decision-making.", fig.align = "center", warning = F, message = F}
+```{r 'DDMfigure', fig.cap = "A graphical illustration of the DDM; $\\alpha$ = boundary separation, indicating the evidence required to respond 'Creative' or 'Not creative'; $\\beta$ = initial bias to choose one response over the other; $\\delta$ = average drift rate, indicating the rate of information accumulation; $\\tau$ = non-decision time, indicating the time used for processes apart from the actual decision-making.", fig.align = "center", warning = F, message = F}
 set.seed(202)
 # create random walk
-values <- 1.6
-current <- 1.6
+values <- 1.5
+current <- 1.5
 while(current > 0 & current < 3) {
   current <- current + ifelse(runif(1) < 0.54, 0.1, -0.1)
   values <- c(values, current)
@@ -26,15 +26,15 @@ ggplot() +
   geom_segment(aes(x = 0, y = 3, yend=3, xend=10), size = 0.7) +
   geom_segment(aes(x = 0, y = 0, yend=3, xend=0), size = 0.7) +
   geom_segment(aes(x = 1.5, y = 0, yend=3, xend=1.5), size = 0.7) +
-  geom_segment(aes(x = 0, y = 1.6, yend=1.6, xend=1.5), size = 0.7) +
+  geom_segment(aes(x = 0, y = 1.5, yend=1.5, xend=1.5), size = 0.7) +
   geom_segment(aes(x = 1.7, xend = 4.5, y = 1.75, yend = 2.7), arrow = arrow(length = unit(0.4, "cm")), size = 0.7) +
-  geom_segment(aes(x = 1.5, y = 1.6, xend = 10, yend = 1.6), size = 0.7, arrow = arrow(length = unit(0.4, "cm"))) +
+  geom_segment(aes(x = 1.5, y = 1.5, xend = 10, yend = 1.5), size = 0.7, arrow = arrow(length = unit(0.4, "cm"))) +
   annotate(geom = "text", x = 9.3, y = 1.8, label = "Time") +
   annotate(geom = "text", x = 8.15, y = 2.7, label = "Creative", size = 4) +
   annotate(geom = "text", x = 8.5, y = 0.3, label = "Not Creative", size = 4) +
   annotate(geom = "text", x = -0.2, y = 0.1, label = "0") +
   annotate(geom = "text", x = -0.2, y = 2.9, label = expression(alpha), size = 5) +
-  annotate(geom = "text", x = -0.32, y = 1.6, label = expression(~alpha*beta), size = 5) +
-  annotate(geom = "text", x = 1.3, y = 1.8, label = expression(tau), size = 5) +
+  annotate(geom = "text", x = -0.32, y = 1.5, label = expression(~alpha*beta), size = 5) +
+  annotate(geom = "text", x = 1.3, y = 1.7, label = expression(tau), size = 5) +
   annotate(geom = "text", x = 3.5, y = 2.6, label = expression(delta), size = 5)
 ```
