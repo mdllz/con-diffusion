@@ -6,7 +6,7 @@ output:
   word_document: papaja::apa6_word
 ---
 
-```{r 'RT distribution plot', fig.width = 7.5, fig.height = 4, fig.align = 'center', fig.cap = "A and B show histograms of the response times in Study 1 and Study 1, respectively. The dotted lines denote the response time medians."}
+```{r 'RT distribution plot', fig.width = 7.5, fig.height = 4, fig.align = 'center', fig.cap = "A and B show histograms of the response times in Study 1 and Study 2, respectively. The dotted lines denote the response time medians."}
 par(mfrow= c(1,2))
 # A.
 hist(dat1$rt, freq = T, xlim = c(0,6), xlab ="Response time (in s)",
