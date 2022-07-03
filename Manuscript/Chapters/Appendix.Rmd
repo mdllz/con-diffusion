@@ -5,6 +5,11 @@ output:
   html_document: default
   word_document: papaja::apa6_word
 ---
+
+\renewcommand{\thefigure}{A\arabic{figure}} \setcounter{figure}{0}
+\renewcommand{\thetable}{A\arabic{table}} \setcounter{table}{0}
+\renewcommand{\theequation}{A\arabic{table}} \setcounter{equation}{0}
+
 ## Appendix A
 
 This Appendix contains the DDM specification. Model differences between the studies are mentioned where necessary.

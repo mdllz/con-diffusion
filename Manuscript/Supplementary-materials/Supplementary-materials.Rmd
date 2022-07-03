@@ -53,6 +53,10 @@ library("BayesFactor")
 # knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 ```
 
+\renewcommand{\thefigure}{S\arabic{figure}} \setcounter{figure}{0}
+\renewcommand{\thetable}{S\arabic{table}} \setcounter{table}{0}
+\renewcommand{\theequation}{S\arabic{table}} \setcounter{equation}{0}
+
 ```{r 'fit assessment analyses', child = "./Analysis-supplementary-materials/FitAssessmentS1.Rmd"}
 
 ```
