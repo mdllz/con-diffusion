@@ -37,6 +37,7 @@ figsintext        : yes
 linenumbers       : no
 mask              : no
 draft             : no
+nocite: ["@Singmann:2018", "@Barchard:2012", "@DonzallazEtAl:2022"]
 header-includes:
   - \raggedbottom
 
